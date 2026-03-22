@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RT 臨床評核預習系統 - TBI 篇</title>
+    <title>RT 臨床評核預習系統 - 腦外傷病人</title>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -90,8 +90,8 @@
 
 <div class="container">
     <div id="login-screen">
-        <h2>🏥 實習生預習系統</h2>
-        <p style="text-align:center; color: #666;">請輸入基本資料開始 TBI 測驗</p>
+        <h2>🏥 實習生技術評核預習系統</h2>
+        <p style="text-align:center; color: #666;">請輸入基本資料開始測驗</p>
         <input type="text" id="name" placeholder="學生姓名">
         <input type="text" id="student-id" placeholder="學號">
         <button onclick="startQuiz()">進入測驗</button>
@@ -138,12 +138,12 @@ const quizData = [
         q: "第一部分：知識面-關於腦外傷急性期的致病機轉與治療原則，下列敘述何者正確？",
         options: [
             "(A) 為降低腦壓，應例行性將 PaCO2 維持在 25mmHg 以下。",
-            "(B) $P_aCO_2$ 升高會導致腦血管舒張，進而可能增加顱內壓 (ICP)。",
+            "(B) PaCO2 升高會導致腦血管舒張，進而可能增加顱內壓 (ICP)。",
             "(C) 腦外傷病人不會發生肺水腫，因此不需要監測肺部物理檢查。",
             "(D) 只要血氧飽和度 SpO2 大於 90%，PaO2的數值並不重要。"
         ],
         correct: 1,
-        exp: "根據 BTF 指南，$P_aCO_2$ 是強力的腦血管調節因子。升高會引發腦血管舒張 (Vasodilation)，增加腦血流體積，使 ICP 惡化。臨床通常維持在正常碳酸血症 (35-45 mmHg)。"
+        exp: "根據 BTF 指南，PaCO2 是強力的腦血管調節因子。升高會引發腦血管舒張 (Vasodilation)，增加腦血流體積，使 ICP 惡化。臨床通常維持在正常碳酸血症 (35-45 mmHg)。"
     },
     {
         q: "第二部分：技能面-你正在為一名 ICP 持續維持在 22 mmHg 的病人設定呼吸器，下列 PEEP 的運用何者最為適當？",
@@ -171,7 +171,7 @@ const quizData = [
         q: "第三部分：態度面-病人 PaCO2升至 50mmHg 導致 ICP 升至 25mmHg。下列哪種 SBAR 報告方式最專業？",
         options: [
             "(A) 「醫師，病人的腦壓好像怪怪的，你要不要來看一下？」",
-            "(B) 「醫師，我是 RT，病人剛剛 $CO_2$ 變高了，所以我調快了呼吸速率。」",
+            "(B) 「醫師，我是 RT，病人剛剛 CO2 變高了，所以我調快了呼吸速率。」",
             "(C) 「(S)10床ICP升至25；(B)原本正常但目前ABG PaCO2 50；(A)我認為是CO2蓄積導致；(R)建議增加通氣量，您覺得如何？」",
             "(D) 靜靜地寫在紀錄上，等醫師巡房再說。"
         ],
@@ -203,7 +203,7 @@ const quizData = [
     {
         q: "第六部分：呼吸問題擬定-TBI 病人併發 ARDS 實施肺保護策略導致 CO2 蓄積時，RT 應如何擬定計畫？",
         options: [
-            "(A) 優先保護肺部，不管 CO2$升高多少。",
+            "(A) 優先保護肺部，不管 CO2升高多少。",
             "(B) 優先保護大腦，放棄低潮氣量策略，給予大潮氣量排空 CO2。",
             "(C) 必須權衡兩者，在維持 ICP < 20 的前提下盡量調低 VT，密切監測 ABG。",
             "(D) 直接將氧氣濃度調至 100% 即可。"
