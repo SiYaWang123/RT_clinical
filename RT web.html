@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RT 臨床評核預習系統 - TBI 篇</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h2 { color: var(--primary-color); text-align: center; }
+        
+        .hidden { display: none; }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        button:hover { opacity: 0.9; }
+
+        .option-btn {
+            background-color: white;
+            color: var(--primary-color);
+            border: 2px solid #eee;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .option-btn.correct { background-color: var(--success-color); color: white; }
+        .option-btn.wrong { background-color: var(--error-color); color: white; }
+
+        #explanation-box {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #e8f4fd;
+            border-left: 5px solid var(--accent-color);
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .progress {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="login-screen">
+        <h2>🏥 實習生預習系統</h2>
+        <p style="text-align:center; color: #666;">請輸入基本資料開始 TBI 測驗</p>
+        <input type="text" id="name" placeholder="學生姓名">
+        <input type="text" id="student-id" placeholder="學號">
+        <button onclick="startQuiz()">進入測驗</button>
+    </div>
+
+    <div id="quiz-screen" class="hidden">
+        <div class="progress" id="progress-text">問題 1 / 3</div>
+        <div id="question-text" style="font-weight: bold; margin-bottom: 15px;"></div>
+        <div id="options-container"></div>
+        <div id="explanation-box" class="hidden">
+            <strong>💡 老師解析：</strong>
+            <p id="explanation-text"></p>
+            <button id="next-btn" onclick="nextQuestion()">下一題</button>
+        </div>
+    </div>
+
+    <div id="result-screen" class="hidden">
+        <h2>🎉 預習完成！</h2>
+        <p id="score-summary" style="text-align:center; font-size: 1.2rem;"></p>
+        <p style="text-align:center; color: #666;">數據已上傳，請截圖此畫面或直接找老師進行臨床評核。</p>
+        <button onclick="location.reload()">重新練習</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+    // 🔴 請在此貼上你的 Firebase Config 🔴
+    const firebaseConfig = {
+        apiKey: "AIzaSyAS59R6b_YULyWnh6IuBuOH_bgj6GOD1pA",
+        authDomain: "student-clinical.firebaseapp.com",
+        projectId: "student-clinical",
+        storageBucket: "student-clinical.firebasestorage.app",
+        messagingSenderId: "300035287320",
+        appId: "1:300035287320:web:aed2a4bc9c8958007b566d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+// 題目資料庫 - 涵蓋致病機轉、參數調整、監測判讀、SBAR 與專業態度
+const quizData = [
+    {
+        q: "第一部分：知識面-關於腦外傷急性期的致病機轉與治療原則，下列敘述何者正確？",
+        options: [
+            "(A) 為降低腦壓，應例行性將 PaCO2 維持在 25mmHg 以下。",
+            "(B) $P_aCO_2$ 升高會導致腦血管舒張，進而可能增加顱內壓 (ICP)。",
+            "(C) 腦外傷病人不會發生肺水腫，因此不需要監測肺部物理檢查。",
+            "(D) 只要血氧飽和度 SpO2 大於 90%，PaO2的數值並不重要。"
+        ],
+        correct: 1,
+        exp: "根據 BTF 指南，$P_aCO_2$ 是強力的腦血管調節因子。升高會引發腦血管舒張 (Vasodilation)，增加腦血流體積，使 ICP 惡化。臨床通常維持在正常碳酸血症 (35-45 mmHg)。"
+    },
+    {
+        q: "第二部分：技能面-你正在為一名 ICP 持續維持在 22 mmHg 的病人設定呼吸器，下列 PEEP 的運用何者最為適當？",
+        options: [
+            "(A) 為了保護肺部，應直接給予 PEEP > 15 cmH2O。",
+            "(B) 只要 ICP 高，PEEP 就必須設定為 0。",
+            "(C) PEEP 可能阻礙靜脈回流導致 ICP 升高，應在維持氧合下使用最低有效 PEEP 並嚴密監測。",
+            "(D) PEEP 只會影響肺部，完全不會影響腦壓。"
+        ],
+        correct: 2,
+        exp: "高 PEEP 會增加胸腔內壓並阻礙頸靜脈回流，進而升高 ICP。臨床需在改善缺氧與維持腦壓間取得平衡。"
+    },
+    {
+        q: "第二部分：技能面-抽痰過程中病人 ICP 從 18 mmHg 飆升至 35 mmHg且對抗呼吸器，你的首要處置為何？",
+        options: [
+            "(A) 不必理會，抽完痰 ICP 自然會降。",
+            "(B) 立即停止抽痰，給予 100% 氧氣，評估是否加強鎮靜或給予過度通氣預處理。",
+            "(C) 調高呼吸器的壓力限制報警值，繼續完成操作。",
+            "(D) 立即將呼吸器管路脫開。"
+        ],
+        correct: 1,
+        exp: "抽痰刺激會引發咳嗽與交感神經興奮，導致 ICP 劇增。應縮短抽痰時間並事先給予足夠鎮靜與氧合，避免二次腦損傷。"
+    },
+    {
+        q: "第三部分：態度面-病人 PaCO2升至 50mmHg 導致 ICP 升至 25mmHg。下列哪種 SBAR 報告方式最專業？",
+        options: [
+            "(A) 「醫師，病人的腦壓好像怪怪的，你要不要來看一下？」",
+            "(B) 「醫師，我是 RT，病人剛剛 $CO_2$ 變高了，所以我調快了呼吸速率。」",
+            "(C) 「(S)10床ICP升至25；(B)原本正常但目前ABG PaCO2 50；(A)我認為是CO2蓄積導致；(R)建議增加通氣量，您覺得如何？」",
+            "(D) 靜靜地寫在紀錄上，等醫師巡房再說。"
+        ],
+        correct: 2,
+        exp: "專業 RT 應具備主動發現問題能力。SBAR (現況、背景、評估、建議) 能最有效率地在臨床環境中完成溝通。"
+    },
+    {
+        q: "第四部分：監測與判讀-病人 MAP 70mmHg、ICP 20mmHg。其腦灌注壓 (CPP) 為何？對 RT 計劃有何影響？",
+        options: [
+            "(A) CPP = 90mmHg，灌注極佳，可積極進行呼吸道清除動作。",
+            "(B) CPP = 50mmHg，灌注不足，應避免升高 ICP 的操作並報告醫師。",
+            "(C) CPP = 3.5mmHg，數值錯誤，不需理會。",
+            "(D) 只要 ICP 小於 20，CPP 的數值並不重要。"
+        ],
+        correct: 1,
+        exp: "CPP = MAP - ICP。此病人 CPP 為 50 mmHg。BTF 指南建議應維持在 60-70 mmHg。CPP 過低時腦部缺血風險高，應減少刺激。"
+    },
+    {
+        q: "第五部分：新病人初始設定-為疑似腦疝脫 (Herniation) 病人插管時協助「短暫」過度通氣，目標 PaCO2 應設為？",
+        options: [
+            "(A)45-55mmHg(高碳酸血症)",
+            "(B) 35-44mmHg (正常碳酸血症)",
+            "(C) 30-35mmHg (輕度低碳酸血症)",
+            "(D) 20-25mmHg (極度低碳酸血症)"
+        ],
+        correct: 2,
+        exp: "急性腦疝脫時可「短暫」過度通氣救命，目標通常為 30-35 mmHg。除非萬不得已，不應降至 25 以下以防嚴重腦缺血。"
+    },
+    {
+        q: "第六部分：呼吸問題擬定-TBI 病人併發 ARDS 實施肺保護策略導致 CO2 蓄積時，RT 應如何擬定計畫？",
+        options: [
+            "(A) 優先保護肺部，不管 CO2$升高多少。",
+            "(B) 優先保護大腦，放棄低潮氣量策略，給予大潮氣量排空 CO2。",
+            "(C) 必須權衡兩者，在維持 ICP < 20 的前提下盡量調低 VT，密切監測 ABG。",
+            "(D) 直接將氧氣濃度調至 100% 即可。"
+        ],
+        correct: 2,
+        exp: "「肺腦天平」難點：TBI 病人不能盲目採取 Permissive Hypercapnia。須在維持腦壓安全範圍內盡力執行肺保護策略。"
+    },
+    {
+        q: "第七部分：專業態度-GCS 6分且咳嗽極差、痰黏稠病人醫師欲拔管。身為 RT 最專業的做法為何？",
+        options: [
+            "(A) 醫師說拔就拔，RT 只負責執行。",
+            "(B) 尊重醫師但主動提供評估數據（如 Cough flow、GCS），並表達對拔管風險擔憂。",
+            "(C) 為了展現態度，直接在病歷上寫「醫師判斷錯誤」。",
+            "(D) 拔管前不說話，等失敗後再提醒醫師。"
+        ],
+        correct: 1,
+        exp: "GCS < 8 是拔管失敗強預測指標。RT 應提供呼吸動力學風險評估，專業態度包含尊重與提供實證建議。"
+    }
+];
+
+    let currentIdx = 0;
+    let score = 0;
+    let studentInfo = { name: "", id: "" };
+
+    window.startQuiz = function() {
+        studentInfo.name = document.getElementById('name').value;
+        studentInfo.id = document.getElementById('student-id').value;
+        if (!studentInfo.name || !studentInfo.id) return alert("請填寫資料");
+
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const q = quizData[currentIdx];
+        document.getElementById('progress-text').innerText = `問題 ${currentIdx + 1} / ${quizData.length}`;
+        document.getElementById('question-text').innerHTML = q.q;
+        const container = document.getElementById('options-container');
+        container.innerHTML = "";
+        
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = "option-btn";
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(i);
+            container.appendChild(btn);
+        });
+        document.getElementById('explanation-box').classList.add('hidden');
+    }
+
+    function checkAnswer(selected) {
+        const q = quizData[currentIdx];
+        const btns = document.querySelectorAll('.option-btn');
+        if (selected === q.correct) {
+            btns[selected].classList.add('correct');
+            score++;
+        } else {
+            btns[selected].classList.add('wrong');
+            btns[q.correct].classList.add('correct');
+        }
+        
+        // 顯示解析
+        document.getElementById('explanation-text').innerText = q.exp;
+        document.getElementById('explanation-box').classList.remove('hidden');
+        // 鎖定所有選項
+        btns.forEach(b => b.disabled = true);
+    }
+
+    window.nextQuestion = function() {
+        currentIdx++;
+        if (currentIdx < quizData.length) {
+            showQuestion();
+        } else {
+            finishQuiz();
+        }
+    }
+
+    async function finishQuiz() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('score-summary').innerText = `您的得分：${score} / ${quizData.length}`;
+
+        // 傳送到 Firebase
+        try {
+            await addDoc(collection(db, "tbi_results"), {
+                ...studentInfo,
+                score: score,
+                timestamp: new Date()
+            });
+            console.log("數據儲存成功");
+        } catch (e) {
+            console.error("儲存失敗", e);
+        }
+    }
+</script>
+
+</body>
+</html>
