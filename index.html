@@ -1,245 +1,423 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RT 臨床評核系統 - TBI 專題</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        :root { --primary-color: #2c3e50; --accent-color: #3498db; --success-color: #27ae60; --error-color: #e74c3c; --bg-color: #f4f7f6; }
-        body { font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
-        .hidden { display: none; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        button { width: 100%; padding: 12px; background-color: var(--accent-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; margin-top: 10px; transition: 0.3s; }
-        button:hover { opacity: 0.9; }
-        
-        /* 測驗樣式 */
-        .option-btn { background-color: white; color: var(--primary-color); border: 2px solid #eee; margin-bottom: 10px; text-align: left; line-height: 1.4; }
-        .option-btn.correct { background-color: var(--success-color) !important; color: white; border-color: var(--success-color); }
-        .option-btn.wrong { background-color: var(--error-color) !important; color: white; border-color: var(--error-color); }
-        
-        #explanation-box { margin-top: 15px; padding: 15px; background-color: #e8f4fd; border-left: 5px solid var(--accent-color); border-radius: 5px; line-height: 1.6; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RT 臨床評核預習系統</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --tbi: #e74c3c; --tbi-light: #fdecea; --tbi-dark: #c0392b;
+    --sci: #2980b9; --sci-light: #eaf4fb; --sci-dark: #1a6090;
+    --success: #27ae60; --error: #e74c3c;
+    --text: #2c3e50; --muted: #7f8c8d; --bg: #f0f3f7;
+    --card: #ffffff; --border: #e0e6ed;
+    --active: #3498db;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', "Microsoft JhengHei", sans-serif; background: var(--bg); min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 20px; }
+  .wrap { width: 100%; max-width: 680px; }
 
-        /* 報告專用樣式 */
-        .report-item { border-bottom: 1px solid #eee; padding: 15px 0; page-break-inside: avoid; }
-        .report-q { font-weight: bold; margin-bottom: 8px; color: var(--primary-color); }
-        .report-ans { font-size: 0.9rem; margin-bottom: 5px; }
-        .report-exp { font-size: 0.85rem; color: #555; background: #f0f7ff; padding: 10px; border-radius: 4px; border: 1px solid #d0e7ff; margin-top: 5px; }
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px; color: white; font-weight: bold; }
-        .tag-correct { background: var(--success-color); }
-        .tag-wrong { background: var(--error-color); }
-        
-        #download-btn { background-color: #9b59b6; font-weight: bold; border: 2px solid #8e44ad; margin-top: 20px; }
-    </style>
+  /* SCREENS */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* CARD */
+  .card { background: var(--card); border-radius: 20px; box-shadow: 0 8px 32px rgba(44,62,80,.10); padding: 2rem; margin-bottom: 1rem; }
+
+  /* HEADER BADGE */
+  .topic-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 20px; font-size: .8rem; font-weight: 700; margin-bottom: 1rem; }
+  .badge-tbi { background: var(--tbi-light); color: var(--tbi); }
+  .badge-sci { background: var(--sci-light); color: var(--sci); }
+
+  /* HERO */
+  .hero { text-align: center; padding: 1.5rem 0 .5rem; }
+  .hero .icon { font-size: 3.5rem; margin-bottom: .5rem; }
+  .hero h1 { font-size: 1.6rem; color: var(--text); font-weight: 800; }
+  .hero p { color: var(--muted); font-size: .9rem; margin-top: .4rem; line-height: 1.6; }
+
+  /* TOPIC CARDS */
+  .topic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .topic-card { border: 2.5px solid var(--border); border-radius: 16px; padding: 1.4rem 1rem; cursor: pointer; transition: all .25s; text-align: center; background: var(--card); }
+  .topic-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+  .topic-card.tbi:hover, .topic-card.tbi.sel { border-color: var(--tbi); background: var(--tbi-light); }
+  .topic-card.sci:hover, .topic-card.sci.sel { border-color: var(--sci); background: var(--sci-light); }
+  .topic-card .t-icon { font-size: 2.4rem; margin-bottom: .5rem; }
+  .topic-card h3 { font-size: 1rem; color: var(--text); margin-bottom: .3rem; }
+  .topic-card p { font-size: .78rem; color: var(--muted); line-height: 1.4; }
+  .topic-card .q-count { display: inline-block; margin-top: .5rem; font-size: .75rem; font-weight: 700; padding: 2px 10px; border-radius: 10px; }
+  .tbi .q-count { background: #fdecea; color: var(--tbi); }
+  .sci .q-count { background: #eaf4fb; color: var(--sci); }
+
+  /* INPUTS */
+  .form-group { margin: .8rem 0; }
+  .form-group label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .05em; }
+  input[type=text] { width: 100%; padding: 12px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 1rem; transition: border .2s; outline: none; }
+  input[type=text]:focus { border-color: var(--active); }
+
+  /* BUTTONS */
+  .btn { display: block; width: 100%; padding: 13px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all .2s; margin-top: .7rem; }
+  .btn-primary { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+  .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+  .btn-tbi { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+  .btn-sci { background: linear-gradient(135deg, #2980b9, #1a6090); color: white; }
+  .btn-ghost { background: #f0f3f7; color: var(--text); }
+  .btn-ghost:hover { background: #e0e6ed; }
+  .btn-purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; }
+  .btn-sm { padding: 9px 16px; font-size: .88rem; border-radius: 8px; width: auto; display: inline-block; }
+
+  /* PROGRESS */
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .8rem; }
+  .progress-label { font-size: .82rem; font-weight: 700; color: var(--muted); }
+  .progress-frac { font-size: .95rem; font-weight: 800; color: var(--text); }
+  .progress-bar-wrap { height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; margin-bottom: 1.2rem; }
+  .progress-bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+  .fill-tbi { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+  .fill-sci { background: linear-gradient(90deg, #3498db, #2980b9); }
+
+  /* QUESTION */
+  .q-category { font-size: .78rem; font-weight: 700; color: white; padding: 3px 10px; border-radius: 8px; display: inline-block; margin-bottom: .8rem; }
+  .cat-tbi { background: var(--tbi); }
+  .cat-sci { background: var(--sci); }
+  .q-text { font-size: 1.05rem; font-weight: 600; color: var(--text); line-height: 1.65; margin-bottom: 1.2rem; }
+
+  /* OPTIONS */
+  .opt { display: block; width: 100%; text-align: left; padding: 13px 16px; margin-bottom: 10px; border: 2px solid var(--border); border-radius: 12px; background: white; font-size: .93rem; color: var(--text); cursor: pointer; transition: all .2s; line-height: 1.5; }
+  .opt:hover:not(:disabled) { border-color: var(--active); background: #eaf4fb; }
+  .opt.correct { background: #eafaf1; border-color: var(--success); color: #1e8449; font-weight: 600; }
+  .opt.wrong { background: #fdecea; border-color: var(--error); color: #c0392b; font-weight: 600; }
+  .opt-label { display: inline-block; width: 26px; height: 26px; border-radius: 50%; background: #f0f3f7; text-align: center; line-height: 26px; font-weight: 700; font-size: .82rem; margin-right: 8px; vertical-align: middle; transition: background .2s; }
+  .opt.correct .opt-label { background: var(--success); color: white; }
+  .opt.wrong .opt-label { background: var(--error); color: white; }
+
+  /* EXPLANATION */
+  .exp-box { margin-top: .8rem; padding: 1rem 1.2rem; border-radius: 12px; border-left: 5px solid; animation: fadeIn .3s; }
+  .exp-correct { background: #eafaf1; border-color: var(--success); }
+  .exp-wrong { background: #fdecea; border-color: var(--error); }
+  .exp-title { font-weight: 800; font-size: 1rem; margin-bottom: .4rem; }
+  .exp-body { font-size: .88rem; line-height: 1.65; color: #444; }
+
+  /* RESULT */
+  .score-circle { width: 110px; height: 110px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+  .score-circle .score-num { font-size: 2.2rem; font-weight: 900; color: white; line-height: 1; }
+  .score-circle .score-denom { font-size: .85rem; color: rgba(255,255,255,.8); }
+  .score-bg-tbi { background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 6px 20px rgba(231,76,60,.35); }
+  .score-bg-sci { background: linear-gradient(135deg, #2980b9, #1a6090); box-shadow: 0 6px 20px rgba(41,128,185,.35); }
+  .result-title { text-align: center; font-size: 1.2rem; font-weight: 800; margin-bottom: .3rem; }
+  .result-sub { text-align: center; color: var(--muted); font-size: .87rem; margin-bottom: 1.2rem; }
+  .stat-row { display: flex; gap: .8rem; margin-bottom: 1.2rem; }
+  .stat-box { flex: 1; background: var(--bg); border-radius: 10px; padding: .8rem; text-align: center; }
+  .stat-box .sv { font-size: 1.4rem; font-weight: 800; }
+  .stat-box .sl { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+  .sv-green { color: var(--success); }
+  .sv-red { color: var(--error); }
+  .sv-blue { color: var(--active); }
+
+  /* REPORT ITEMS */
+  .report-item { border-bottom: 1px solid var(--border); padding: 14px 0; }
+  .report-item:last-child { border-bottom: none; }
+  .ri-q { font-size: .88rem; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.5; }
+  .ri-ans { font-size: .83rem; margin-bottom: 4px; }
+  .ri-exp { font-size: .8rem; color: #555; background: #f7faff; padding: 8px 10px; border-radius: 8px; border-left: 3px solid var(--active); margin-top: 6px; line-height: 1.6; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: .75rem; color: white; font-weight: 700; margin-right: 4px; }
+  .tag-ok { background: var(--success); }
+  .tag-ng { background: var(--error); }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.07)} }
+  .pop { animation: pop .3s ease; }
+
+  /* REPORT DOWNLOAD AREA */
+  #report-capture { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border); }
+  .report-header-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; padding-bottom: .8rem; border-bottom: 2px solid; }
+  .rh-tbi { border-color: var(--tbi); }
+  .rh-sci { border-color: var(--sci); }
+
+  /* DIVIDER */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+
+  /* BACK LINK */
+  .back-link { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: .85rem; cursor: pointer; margin-bottom: 1rem; transition: color .2s; }
+  .back-link:hover { color: var(--text); }
+</style>
 </head>
 <body>
+<div class="wrap">
 
-<div class="container">
-    <div id="login-screen">
-        <h2 style="text-align:center;">🏥 RT 臨床技術評核預習</h2>
-        <h4 style="text-align:center; color:#34495e;">主題：腦外傷 (TBI) 呼吸照護</h4>
-        <p style="text-align:center; color:#7f8c8d; font-size: 0.9rem;">請輸入個人資料後開始測驗</p>
-        <input type="text" id="name" placeholder="學生姓名">
-        <input type="text" id="student-id" placeholder="學號">
-        <button id="start-btn">進入測驗</button>
+<!-- ======= SCREEN 1: HOME ======= -->
+<div class="screen active" id="s-home">
+  <div class="card" style="margin-top:1rem;">
+    <div class="hero">
+      <div class="icon">🏥</div>
+      <h1>RT 臨床技術評核預習</h1>
+      <p>呼吸治療實習生技術評核前導引平台<br>選擇主題開始測驗，強化臨床核心知識</p>
     </div>
-
-    <div id="quiz-screen" class="hidden">
-        <div id="progress-text" style="color: #7f8c8d; font-size: 0.85rem; font-weight: bold;"></div>
-        <h3 id="question-text" style="margin: 15px 0; font-size: 1.1rem; line-height: 1.5;"></h3>
-        <div id="options-container"></div>
-        <div id="explanation-box" class="hidden">
-            <p id="explanation-text" style="margin:0;"></p>
-            <button id="next-btn">下一題</button>
-        </div>
+    <hr class="divider">
+    <p style="font-size:.82rem;font-weight:700;color:var(--muted);letter-spacing:.05em;text-align:center;margin-bottom:1rem;">選擇測驗主題</p>
+    <div class="topic-grid">
+      <div class="topic-card tbi" onclick="selectTopic('tbi')">
+        <div class="t-icon">🧠</div>
+        <h3>腦外傷照護</h3>
+        <p>TBI 呼吸照護<br>ICP管理・氧合目標・腦灌注</p>
+        <span class="q-count">15 題</span>
+      </div>
+      <div class="topic-card sci" onclick="selectTopic('sci')">
+        <div class="t-icon">🦴</div>
+        <h3>脊椎損傷照護</h3>
+        <p>SCI 呼吸照護<br>脫機訓練・分泌物清除</p>
+        <span class="q-count">15 題</span>
+      </div>
     </div>
-
-    <div id="result-screen" class="hidden">
-        <div id="report-area" style="background: white; padding: 25px; border: 1px solid #ddd; border-radius: 10px;">
-            <h2 style="text-align:center; color: var(--primary-color); margin-top:0;">📋 RT 臨床教學評核報告</h2>
-            <div id="student-info-display" style="border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 15px; font-size: 1rem;"></div>
-            <div id="report-content"></div>
-            <p style="text-align:right; font-size:0.75rem; color:#999; margin-top: 20px;" id="report-time"></p>
-        </div>
-        
-        <button id="download-btn">📸 生成完整報告圖片 (傳給老師)</button>
-        <button onclick="location.reload()" style="background:#95a5a6; margin-top: 10px;">重新練習</button>
+    <div style="background:#f7f9fb;border-radius:12px;padding:1rem;margin-top:.5rem;">
+      <p style="font-size:.82rem;color:var(--muted);line-height:1.7;text-align:center;">💡 每題作答後即時顯示臨床解析<br>完成後可查看個人學習報告並下載複習</p>
     </div>
+  </div>
 </div>
 
+<!-- ======= SCREEN 2: LOGIN ======= -->
+<div class="screen" id="s-login">
+  <div class="card" style="margin-top:1rem;">
+    <span class="back-link" onclick="goHome()">← 返回選擇主題</span>
+    <div id="login-badge"></div>
+    <h2 style="font-size:1.25rem;font-weight:800;color:var(--text);margin-bottom:.3rem;" id="login-title"></h2>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:1.2rem;" id="login-sub"></p>
+    <div class="form-group"><label>學生姓名</label><input type="text" id="inp-name" placeholder="請輸入姓名"></div>
+    <div class="form-group"><label>學號</label><input type="text" id="inp-sid" placeholder="請輸入學號"></div>
+    <button class="btn btn-primary" id="btn-start" onclick="startQuiz()">開始測驗 →</button>
+  </div>
+</div>
+
+<!-- ======= SCREEN 3: QUIZ ======= -->
+<div class="screen" id="s-quiz">
+  <div class="card" style="margin-top:1rem;">
+    <div id="quiz-badge"></div>
+    <div class="progress-header">
+      <span class="progress-label" id="prog-label">問題進度</span>
+      <span class="progress-frac" id="prog-frac"></span>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-fill"></div></div>
+    <div class="q-category" id="q-cat"></div>
+    <div class="q-text" id="q-text"></div>
+    <div id="opts-wrap"></div>
+    <div id="exp-wrap"></div>
+  </div>
+</div>
+
+<!-- ======= SCREEN 4: RESULT ======= -->
+<div class="screen" id="s-result">
+  <div class="card" style="margin-top:1rem;" id="result-top">
+    <div id="score-circle-wrap"></div>
+    <div class="result-title" id="res-title"></div>
+    <div class="result-sub" id="res-sub"></div>
+    <div class="stat-row" id="stat-row"></div>
+    <button class="btn btn-purple" onclick="downloadReport()">📥 下載學習報告（複習用）</button>
+    <button class="btn btn-ghost" onclick="tryOther()" id="btn-other" style="margin-top:.5rem;"></button>
+    <button class="btn btn-ghost" onclick="goHome()" style="margin-top:.5rem;">🏠 返回首頁</button>
+  </div>
+
+  <!-- Hidden printable report -->
+  <div style="padding:0 0 2rem;">
+    <div id="report-capture">
+      <div class="report-header-bar" id="rpt-header-bar">
+        <div>
+          <div style="font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:4px;">📋 RT 臨床教學評核學習報告</div>
+          <div style="font-size:.85rem;color:var(--muted);" id="rpt-meta"></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:1.4rem;font-weight:900;" id="rpt-score-big"></div>
+          <div style="font-size:.75rem;color:var(--muted);" id="rpt-time"></div>
+        </div>
+      </div>
+      <div id="rpt-items"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const quizData = [
-        {
-            q: "第一部分：知識面-關於腦外傷急性期的致病機轉與治療原則，下列敘述何者正確？",
-            options: ["(A) 為降低腦壓，應例行性將 PaCO2 維持在 25mmHg 以下。", "(B) PaCO2 升高會導致腦血管舒張，進而可能增加顱內壓 (ICP)。", "(C) 腦外傷病人不會發生肺水腫，因此不需要監測肺部物理檢查。", "(D) 只要血氧飽和度 SpO2 大於 90%，PaO2的數值並不重要。"],
-            correct: 1,
-            exp: "根據 BTF 指南，PaCO2 是強力的腦血管調節因子。升高會引發血管舒張，增加腦血流體積使 ICP 惡化。臨床通常維持在 35-45 mmHg。"
-        },
-        {
-            q: "第二部分：技能面-你正在為一名 ICP 持續維持在 22 mmHg 的病人設定呼吸器，下列 PEEP 的運用何者最為適當？",
-            options: ["(A) 為了保護肺部，應直接給予 PEEP > 15 cmH2O。", "(B) 只要 ICP 高，PEEP 就必須設定為 0。", "(C) PEEP 可能阻礙靜脈回流導致 ICP 升高，應在維持氧合下使用最低有效 PEEP 並嚴密監測。", "(D) PEEP 只會影響肺部，完全不會影響腦壓。"],
-            correct: 2,
-            exp: "高 PEEP 會增加胸內壓並阻礙頸靜脈回流。臨床需在改善缺氧與維持腦壓間取得平衡，採最低有效 PEEP。"
-        },
-        {
-            q: "第二部分：技能面-抽痰過程中病人 ICP 從 18 mmHg 飆升至 35 mmHg且對抗呼吸器，你的首要處置為何？",
-            options: ["(A) 不必理會，抽完痰 ICP 自然會降。", "(B) 立即停止抽痰，給予 100% 氧氣，評估是否加強鎮靜或過度通氣預處理。", "(C) 調高呼吸器的壓力限制報警值，繼續完成操作。", "(D) 立即將呼吸器管路脫開。"],
-            correct: 1,
-            exp: "抽痰會引發咳嗽與交感神經興奮導致 ICP 劇增。應立即停止刺激並給予足夠鎮靜與氧合，避免二次腦損傷。"
-        },
-        {
-            q: "第三部分：態度面-病人 PaCO2 升至 50mmHg 導致 ICP 升至 25mmHg。下列哪種 SBAR 報告方式最專業？",
-            options: ["(A) 「醫師，病人的腦壓好像怪怪的，你要不要來看一下？」", "(B) 「醫師，我是 RT，病人剛剛 CO2 變高了，所以我調快了呼吸速率。」", "(C) 「(S)10床ICP升至25；(B)原正常但目前PaCO2 50；(A)我認為是CO2蓄積導致；(R)建議增加通氣量，您覺得如何？」", "(D) 靜靜地寫在紀錄上，等醫師巡房再說。"],
-            correct: 2,
-            exp: "專業 RT 應具備主動發現並分析問題的能力。SBAR 能最有效率地在忙碌臨床環境中完成精準溝通。"
-        },
-        {
-            q: "第四部分：監測與判讀-病人 MAP 70mmHg、ICP 20mmHg。其腦灌注壓 (CPP) 為何？對 RT 計劃有何影響？",
-            options: ["(A) CPP = 90mmHg，灌注極佳，可積極進行呼吸道清除動作。", "(B) CPP = 50mmHg，灌注不足，應避免升高 ICP 的操作並報告醫師。", "(C) CPP = 3.5mmHg，數值錯誤，不需理會。", "(D) 只要 ICP 小於 20，CPP 的數值並不重要。"],
-            correct: 1,
-            exp: "CPP = MAP - ICP (70-20=50)。BTF 建議應維持在 60-70 mmHg。50 代表灌注不足，腦缺血風險高，應減少刺激。"
-        },
-        {
-            q: "第五部分：新病人初始設定-為疑似腦疝脫 (Herniation) 病人插管時協助「短暫」過度通氣，目標 PaCO2 應設為？",
-            options: ["(A) 45-55mmHg(高碳酸血症)", "(B) 35-44mmHg (正常碳酸血症)", "(C) 30-35mmHg (輕度低碳酸血症)", "(D) 20-25mmHg (極度低碳酸血症)"],
-            correct: 2,
-            exp: "急性腦疝脫時可「短暫」通氣救命，目標為 30-35 mmHg。除非萬不得已，不應降至 25 以下以防嚴重腦缺血。"
-        },
-        {
-            q: "第六部分：呼吸問題擬定-TBI 病人併發 ARDS 實施肺保護策略導致 CO2 蓄積時，RT 應如何擬定計畫？",
-            options: ["(A) 優先保護肺部，不管 CO2 升高多少。", "(B) 優先保護大腦，放棄低潮氣量策略，給予大潮氣量排空 CO2。", "(C) 必須權衡兩者，在維持 ICP < 20 的前提下盡量調低 VT，密切監測 ABG。", "(D) 直接將氧氣濃度調至 100% 即可。"],
-            correct: 2,
-            exp: "「肺腦天平」：TBI 病人不能盲目採取允許性高碳酸血症。須在維持腦壓安全範圍內盡力執行肺保護策略。"
-        },
-        {
-            q: "第七部分：專業態度-GCS 6分且咳嗽極差、痰黏稠病人醫師欲拔管。身為 RT 最專業的做法為何？",
-            options: ["(A) 醫師說拔就拔，RT 只負責執行。", "(B) 尊重醫師但主動提供評估數據（如 Cough flow、GCS），並表達對拔管風險擔憂。", "(C) 為了展現態度，直接在病歷上寫「醫師判斷錯誤」。", "(D) 拔管前不說話，等失敗後再提醒醫師。"],
-            correct: 1,
-            exp: "GCS < 8 是拔管失敗強預測指標。RT 應提供呼吸動力學與風險評估數據，專業態度包含尊重與提供實證建議。"
-        }
-    ];
+const DB = {
+  tbi: {
+    label: 'TBI 腦外傷', icon: '🧠', color: 'tbi',
+    questions: [
+      { cat:'第一部分：知識面', q:'情境：一名急性嚴重 TBI 病人 ICP 監測值為 25 mmHg。\n\n當 PaCO₂ 從 40 mmHg 下降至 30 mmHg 時，腦部血管會發生什麼變化？', opts:['腦血管擴張，增加腦血流量 (CBF)','腦血管收縮，減少腦血容量 (CBV) 從而降低 ICP','腦血管無變化，僅影響氧合','腦血管舒張，增加顱內壓'], ans:1, exp:'二氧化碳是強力的血管舒縮因子。低碳酸血症 (Hypocapnia) 會引起腦小動脈收縮，減少腦血容量而降低ICP；但長期維持 PaCO₂ < 25 mmHg 有腦缺血風險。' },
+      { cat:'第一部分：知識面', q:'根據 UpToDate 與 ESICM 共識，嚴重腦傷病人的氧合管理目標，下列何者正確？', opts:['PaO₂ < 60 mmHg 即可','只要 SpO₂ > 88% 即可','應維持 PaO₂ ≥ 80 mmHg，避免二次腦傷害','為了預防氧中毒，應維持 FiO₂ 在 0.21'], ans:2, exp:'低血氧會導致腦部代謝危機，加重繼發性受損。建議維持 PaO₂ ≥ 80 mmHg 或正常範圍，避免二次腦損傷。' },
+      { cat:'第一部分：知識面', q:'針對嚴重 TBI 患者，呼吸治療師在幫病人進行呼吸治療前，觀察到 EVD（腦室外引流管）的測量基準點必須對準哪個解剖位置才算正確？', opts:['劍突 (Xiphoid process)','外耳道 (External Auditory Meatus) 或兩眼外眥連線中點','鎖骨中線','腳底板'], ans:1, exp:'EVD 是利用重力與壓力差原理引流，基準點通常設定在室間孔 (Foramen of Monro) 的高度，臨床上多以「外耳道」作為對齊基準。若對齊不準，會導致 ICP 數值錯誤。' },
+      { cat:'第一部分：知識面', q:'針對 TBI 併發 ARDS 的病人，使用「低潮氣量 (6 mL/kg)」的主要擔憂為何？', opts:['會導致氧氣過高','可能引起高碳酸血症 (PaCO₂↑)，進而導致 ICP 升高','會導致肺泡塌陷','會減少呼吸道阻力'], ans:1, exp:'這是典型的「肺腦衝突」。低潮氣量可能導致 CO₂ 堆積，進而引起腦血管舒張、ICP 升高。需在監測 ICP 的情況下謹慎滴定潮氣容積。' },
+      { cat:'第一部分：知識面', q:'若病人 MAP = 90 mmHg，ICP = 20 mmHg，則其 CPP 為多少？是否達標？', opts:['70 mmHg；達標 (建議目標 60-70 mmHg)','110 mmHg；太高','50 mmHg；太低','110 mmHg；正常'], ans:0, exp:'CPP = MAP - ICP = 90 - 20 = 70 mmHg。文獻建議 CPP 維持在 60-70 mmHg，此值達標。CPP 不足代表腦灌注不足，有缺血風險。' },
+      { cat:'第二部分：技能面', q:'當調整 PEEP 從 5 cmH₂O 升至 15 cmH₂O 時，RT 應密切觀察哪項指標以預防腦壓升高？', opts:['潮氣量','吐氣末二氧化碳 (EtCO₂)','腦灌注壓 (CPP)，觀察是否因回流受阻或 MAP 下降而減少','呼吸道壓力'], ans:2, exp:'高 PEEP 可能增加胸內壓、阻礙頸靜脈回流或降低心輸出量，進而影響 CPP。應在調整 PEEP 同時密切監測 CPP 與 ICP 的變化。' },
+      { cat:'第二部分：技能面', q:'為了預防抽痰引起 ICP 瞬間飆升，下列操作何者「錯誤」？', opts:['抽痰前給予 100% 氧氣','抽痰前確保病人有足夠的鎮靜或止痛','每次抽痰時間不超過 15 秒','為了抽乾淨，應連續反覆抽吸超過 30 秒'], ans:3, exp:'抽痰刺激會引起交感神經興奮及咳嗽，咳嗽增加胸腔內壓，阻礙靜脈回流，使 ICP 瞬間升高。應短促操作，減少刺激次數，且每次不超過 15 秒。' },
+      { cat:'第二部分：技能面', q:'針對高腦壓病人，RT 在調整管路或更換固定帶時，應維持床頭高度 (HOB) 於多少？', opts:['平躺 (0度)','15度','30-45度','90度坐起'], ans:2, exp:'抬高床頭 30-45 度可促進頸靜脈回流，降低 ICP，且有助於預防呼吸器相關肺炎 (VAP)。' },
+      { cat:'第二部分：技能面', q:'TBI 病人與一般病人相比，拔管失敗最常見的原因是？', opts:['肺部順應性太差','呼吸肌無力','意識狀態改變及無法保護氣道（痰液多、咳嗽力差）','氧合不足'], ans:2, exp:'文獻強調急性腦傷 (ABI) 病人拔管失敗多源於神經功能（GCS 低）而非肺部動力學問題。意識不清導致無法有效保護氣道是最主要原因。' },
+      { cat:'第二部分：技能面', q:'根據 ESICM 建議，對於預期需長期通氣的嚴重 TBI 病人，早期氣切（< 7天）的好處不包括？', opts:['減少呼吸器使用天數','降低 ICU 住院天數','減少鎮靜劑的使用','100% 預防肺炎發生'], ans:3, exp:'早期氣切可縮短呼吸器使用時間與 ICU 住院天數、減少鎮靜藥物使用，但不能完全保證「100%」預防肺炎。' },
+      { cat:'第三部分：態度面', q:'情境：抽痰時發現病人 ICP 從 15 升至 35 mmHg 且持續不降。RT 的專業反應應為何？', opts:['默默離開，等它自己降下來','檢查管路是否曲折，確認鎮靜藥物是否滴完，並立即報告醫師與護理師','直接調高壓力限制','調低 PEEP 就好'], ans:1, exp:'展現主動性（Initiative）及團隊警覺（Vigilance）。ICP 持續升高是緊急情況，應立即排除可矯正因素並通報團隊。' },
+      { cat:'第三部分：態度面', q:'情境：你發現腦傷病人 ABG 顯示 PaCO₂ 為 50 mmHg（病人原目標為 35-40）。向醫師報告時，下列哪種表達最具專業態度？', opts:['「醫師，病人 CO₂ 很高，你要不要改參數？」','「醫師，病人目前 PaCO₂ 50 mmHg，高於設定目標，這可能會升高 ICP，我建議調整 MV 或增加潮氣量，您覺得呢？」','「醫師，機器在叫，你去看看。」','「醫師，病人酸鹼值不對。」'], ans:1, exp:'展現專業邏輯（Assessment & Recommendation），而不只是傳達數據。SBAR 溝通能讓醫師迅速了解情境、評估與建議。' },
+      { cat:'第三部分：態度面', q:'在幫一名 GCS 3 分的嚴重腦傷病人進行肺部復健時，病人反應微弱，RT 應有的態度為何？', opts:['反正他沒感覺，不需解釋，快速做完','在操作前仍向病人說明，並觀察其 ICP 波動，展現對病人的尊重與細緻觀察','抱怨病人不配合','只跟家屬聊天，不理會病人'], ans:1, exp:'專業態度包含即使病人意識不清，仍給予基本的尊重與專業儀式感。同時觀察 ICP 波動是重要的安全監測行為。' },
+      { cat:'第三部分：態度面', q:'情境：神外醫師正在為病人進行 EVD 的調整。此時 RT 若需要測量呼吸參數，應如何展現態度？', opts:['直接衝過去測，時間就是金錢','先詢問醫師目前操作是否穩定，待其調整完畢且 ICP 穩定後再行施作','叫醫師閃開，因為呼吸很重要','放棄測量，明天再說'], ans:1, exp:'展現對跨領域合作（Interprofessional Collaboration）的理解與尊重。病人安全永遠是優先考量。' },
+      { cat:'第三部分：態度面', q:'當老師問及為何 TBI 病人不能使用過度通氣 (Hyperventilation) 時，學生回答：「因為 UpToDate 文獻指出這會導致腦缺血」，這展現了評核表中哪種態度？', opts:['只是背書','具備「主動學習」與「實證為導向」的專業素養','喜歡反駁老師','記憶力好而已'], ans:1, exp:'引用可靠來源（如 UpToDate）證明實習生具備主動查閱文獻的專業態度，這是現代臨床工作者最重要的核心能力之一。' }
+    ]
+  },
+  sci: {
+    label: 'SCI 脊椎損傷', icon: '🦴', color: 'sci',
+    questions: [
+      { cat:'第一部分：知識面', q:'關於脊椎損傷節段與其受影響呼吸功能的對應，下列敘述何者正確？', opts:['C1-C2 損傷：橫膈功能正常，不需依賴呼吸器','T1-T6 損傷：橫膈功能正常，但失去肋間肌支持，吸氣儲備與呼氣力受損','T12 以下損傷：腹肌功能完全喪失，導致咳嗽完全無效','L-spine 損傷：吸氣與呼氣肌力皆會嚴重受損，必須長期氣切'], ans:1, exp:'C1-C3 影響膈神經，橫膈完全麻痺；C4-C5 橫膈部分保留；T1-T11 橫膈正常但肋間/腹肌依節段受損；L1 以下呼吸肌多數正常。T1-T6 損傷橫膈保留但用力呼吸和咳嗽受損。' },
+      { cat:'第一部分：知識面', q:'SCI 病人出現「限制性肺部疾患 (Restrictive lung disease)」的主要生理機轉不包括下列何者？', opts:['呼吸肌無力導致吸氣容積下降','腹肌麻痺導致呼氣儲備容積 (ERV) 趨近於零','肺部順應性 (Compliance) 顯著增加','胸壁順應性因關節僵硬而下降'], ans:2, exp:'SCI 會因反覆肺不張 (Atelectasis) 導致肺順應性「下降」，而非增加。這與一般認知相反，需特別記憶。' },
+      { cat:'第一部分：知識面', q:'關於 SCI 病人（特別是高位頸椎受損）長期呼吸器脫離的「衝刺式 (Sprints)」訓練原則，下列敘述何者正確？', opts:['應盡快嘗試完全脫離，不需考慮呼吸肌疲勞','由短時間 T-piece 或低 PS 逐漸增加自主呼吸時間，並在疲勞前接回穩定模式休息','頸椎損傷者絕對無法脫離呼吸器，不需訓練','脫離過程中只需看 SpO₂，不需要監測肺活量 (VC) 的趨勢'], ans:1, exp:'SCI 病人呼吸肌極易疲勞。「衝刺式」訓練強調在呼吸肌尚未達到筋疲力竭之前給予充足休息。這種訓練-休息循環比長時間低強度負擔更有效率，且能避免訓練倒退。' },
+      { cat:'第一部分：知識面', q:'針對 SCI 病人（尤其是呼氣肌無力者），下列哪項處置對預防肺炎與清除深部痰液最為關鍵？', opts:['給予高劑量支氣管擴張劑','實施機械性吸-呼技術 (Mechanical Insufflation-Exsufflation, MIE，如咳嗽機)','長期維持高濃度氧氣治療','嚴格限制病患水分攝取以減少痰量'], ans:1, exp:'SCI 病人因腹肌麻痺無法產生有效咳嗽流速。MIE（咳嗽機）透過正壓充氣後迅速切換為負壓抽吸，能模擬有效咳嗽，是 SCI 照護的黃金準則。' },
+      { cat:'第一部分：知識面', q:'根據急性 SCI 處理指引，為了維持脊髓灌注並預防二次傷害，通常建議平均動脈壓 (MAP) 應維持在？', opts:['60-65 mmHg','85-90 mmHg（持續至少 7 天）','120-140 mmHg','越高越好，以利神經修復'], ans:1, exp:'UpToDate 建議急性 SCI 急性期維持 MAP 85-90 mmHg，持續至少 7 天，目的是減少缺血導致的繼發性神經受損。' },
+      { cat:'第二部分：技能面', q:'關於 SCI 病人的最大吸氣壓 (Pimax / MIP)，下列敘述何者正確？', opts:['MIP 數值越接近 0，代表吸氣肌力越強','頸椎損傷病人的 MIP 通常會顯著下降，若 MIP 低於 -20~-30 cmH₂O 往往提示呼吸衰竭風險高','MIP 僅受橫膈影響，與輔助呼吸肌無關','只有插管病人才能測量 MIP'], ans:1, exp:'MIP 反映橫膈及輔助吸氣肌的綜合強度。SCI 病人因肌肉麻痺，MIP 絕對值大幅下降。當數值無法達到足夠負壓（比 -20 更靠近 0），代表無法維持自主呼吸。' },
+      { cat:'第二部分：技能面', q:'針對急性神經系統損傷病人，建議初始呼吸器潮氣容積設定應維持在多少範圍內？', opts:['4-6 mL/kg (IBW)','6-8 mL/kg (IBW)','12-15 mL/kg (IBW)','不論病人體重，統一設定為 500 mL'], ans:1, exp:'目前國際共識建議神經重症病患採用保護性肺通氣，潮氣容積設定為 6-8 mL/kg（理想體重 IBW），兼顧肺部保護並減少 VILI。' },
+      { cat:'第二部分：技能面', q:'針對肺活量 (VC) 嚴重受限的 SCI 病人，使用間歇正壓呼吸 (IPPB) 的主要目的是？', opts:['增加病人的心輸出量','輔助肺泡擴張 (Lung Expansion)，預防肺不張，並增加吸氣容量以利後續咳嗽','取代支氣管擴張劑噴霧','降低氣道阻力'], ans:1, exp:'IPPB 可提供高於病人自主吸氣的容積，幫助塌陷的肺泡重新張開，並能增加咳嗽前的吸氣儲備，對 SCI 病人的肺部擴張和排痰非常重要。' },
+      { cat:'第二部分：技能面', q:'針對咳嗽尖峰流速 (PCF) 不足的 SCI 病人使用機械性吸-呼技術 (MI-E)，其主要優勢為何？', opts:['顯著增加病人的橫膈肌力，加速脫離呼吸器','透過模擬生理咳嗽流速，有效清除氣道分泌物，減少肺炎發生率與非預期再插管率','縮短病人脊椎手術後的骨頭癒合時間','可以完全取代支氣管鏡抽痰，不需再人工抽痰'], ans:1, exp:'UpToDate 與多項 SCI 指引指出，MI-E 是清除 SCI 病人分泌物的首選，能將低於門檻的 PCF 提升至安全水平（>160 L/min），是降低肺炎死亡率的關鍵介入。' },
+      { cat:'第二部分：技能面', q:'在急性 SCI 早期，臨床指引建議維持 MAP 在 85-90 mmHg。身為 RT，在設定 PEEP 時應注意什麼？', opts:['過高的 PEEP 可能增加胸內壓，進而降低心輸出量與 MAP，損害脊髓灌注','應調低潮氣容積至 4 mL/kg 以彌補高 PEEP','應盡可能使用最高 PEEP 以預防肺炎','PEEP 與血壓完全無關'], ans:0, exp:'高氣道壓力會減少靜脈回流，在神經休克的病人更明顯地影響血壓。過高 PEEP 可能導致 MAP 下降，損害脊髓灌注，引起二次神經損傷。' },
+      { cat:'第三部分：態度面', q:'情境：實習生發現 SCI 病人 NIF 從 -35 變為 -18 cmH₂O。根據 SBAR 溝通原則，此時最專業的「Recommendation (建議)」應為？', opts:['繼續觀察，明天再測','警示醫護團隊病人肌力退化風險，建議考慮加強 NIV 支持或延後拔管','直接幫病人改為氧氣面罩','報告病人今天情緒不穩'], ans:1, exp:'對應評核表中「主動回報異常」與「提出專業分析」的標準。NIF 惡化是呼吸衰竭的早期預警信號，RT 應主動提出具體建議而非被動等待。' },
+      { cat:'第三部分：態度面', q:'情境：一名高位頸椎受損病人因依賴呼吸器產生嚴重焦慮，拒絕拍痰與做呼吸訓練。RT 的正確溝通態度為何？', opts:['嚴厲告訴病人不配合就會肺炎','保持同理心，解釋呼吸治療對預防肺炎與提早練習說話的重要性，並尋求團隊諮商','既然病人拒絕，就不要管他','直接強制執行治療，不需說明'], ans:1, exp:'符合評核表中「展現同理心」與「尊重病人感受」。高位頸椎損傷病人面臨巨大的心理衝擊，RT 的溝通技巧與同理心是治療成功的關鍵。' },
+      { cat:'第三部分：態度面', q:'在執行 MIP/MEP 測量時，RT 的哪種溝通表現最符合評核表中的「專業溝通」細項？', opts:['靜靜看著病人吸氣就好','使用堅定、清晰且具激勵性的口令（如：吸！吸！吸！用力！），確保病人達到最大努力','告訴病人隨便吸一下就好，不要太累','只跟家屬溝通，不跟病人說話'], ans:1, exp:'肌力評估高度依賴病人的配合（Effort-dependent）。專業的引導與激勵是獲取準確數據的關鍵技能，也是 RT 與病人溝通能力的重要展現。' },
+      { cat:'第三部分：態度面', q:'情境：物理治療師 (PT) 準備幫 SCI 病人進行站立床練習。身為負責該床的 RT，應如何表現最佳的專業協作態度？', opts:['告訴 PT 不要弄亂我的呼吸器管路','主動參與，確認管路預留長度、警報設定，並在過程中監測病人氧合與呼吸頻率','讓 PT 自己去處理，出事再去救援','叫護理師去看就好'], ans:1, exp:'跨團隊合作 (Interprofessional Collaboration) 是現代醫療評核的核心。RT 應主動確保在進行復健治療時呼吸道安全與氧合穩定。' },
+      { cat:'第三部分：態度面', q:'面對長期需通氣的 SCI 病人，關於氣切 (Tracheostomy) 的溝通，何者展現了正確的實證醫學態度？', opts:['告知氣切後便再也不能說話與進食','提供實證數據：解釋早期氣切可減少感染與藥物使用，且後續可搭配說話瓣膜恢復社交','恐嚇病人若不氣切會立刻死亡','建議家屬不要讓病人知道有氣切這件事'], ans:1, exp:'專業 RT 應基於文獻（如 UpToDate）提供科學且具希望感的諮詢。說話瓣膜（PMV）的使用確實能幫助氣切病人恢復發聲，這是重要的生活品質議題。' }
+    ]
+  }
+};
 
-    let currentIdx = 0;
-    let name = "";
-    let sid = "";
-    let userRecords = [];
+let topic = null, uname = '', usid = '', idx = 0, records = [];
 
-    document.getElementById('start-btn').addEventListener('click', function() {
-        name = document.getElementById('name').value.trim();
-        sid = document.getElementById('student-id').value.trim();
-        if (!name || !sid) { alert("請完整填寫姓名與學號"); return; }
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('quiz-screen').classList.remove('hidden');
-        showQuestion();
-    });
+function selectTopic(t) {
+  topic = t;
+  const d = DB[t];
+  document.getElementById('login-badge').innerHTML = `<span class="topic-badge badge-${t}">${d.icon} ${d.label}</span>`;
+  document.getElementById('login-title').textContent = `${d.label} 呼吸照護測驗`;
+  document.getElementById('login-sub').textContent = `共 ${d.questions.length} 題，每題作答後顯示臨床解析`;
+  document.getElementById('btn-start').className = `btn btn-${t}`;
+  show('s-login');
+}
 
-    function showQuestion() {
-        const q = quizData[currentIdx];
-        document.getElementById('progress-text').innerText = `問題 ${currentIdx + 1} / ${quizData.length}`;
-        document.getElementById('question-text').innerText = q.q;
-        const container = document.getElementById('options-container');
-        container.innerHTML = "";
-        document.getElementById('explanation-box').classList.add('hidden');
+function goHome() { topic=null; idx=0; records=[]; show('s-home'); }
 
-        q.options.forEach((opt, i) => {
-            const btn = document.createElement('button');
-            btn.className = "option-btn";
-            btn.innerText = opt;
-            btn.onclick = () => checkAnswer(i);
-            container.appendChild(btn);
-        });
-    }
+function startQuiz() {
+  uname = document.getElementById('inp-name').value.trim();
+  usid  = document.getElementById('inp-sid').value.trim();
+  if (!uname || !usid) { alert('請完整填寫姓名與學號'); return; }
+  idx = 0; records = [];
+  show('s-quiz');
+  renderQ();
+}
 
-    function checkAnswer(selected) {
-        const q = quizData[currentIdx];
-        const isCorrect = (selected === q.correct);
-        
-        userRecords.push({
-            question: q.q,
-            userAns: q.options[selected],
-            correctAns: q.options[q.correct],
-            isCorrect: isCorrect,
-            exp: q.exp
-        });
+function renderQ() {
+  const d = DB[topic], q = d.questions[idx];
+  const pct = (idx / d.questions.length * 100).toFixed(0);
+  document.getElementById('quiz-badge').innerHTML = `<span class="topic-badge badge-${topic}">${d.icon} ${d.label}</span>`;
+  document.getElementById('prog-frac').textContent = `${idx+1} / ${d.questions.length}`;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-fill').className = `progress-bar-fill fill-${topic}`;
+  document.getElementById('q-cat').textContent = q.cat;
+  document.getElementById('q-cat').className = `q-category cat-${topic}`;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('exp-wrap').innerHTML = '';
 
-        const btns = document.querySelectorAll('.option-btn');
-        if (isCorrect) {
-            btns[selected].classList.add('correct');
-        } else {
-            btns[selected].classList.add('wrong');
-            btns[q.correct].classList.add('correct');
-        }
+  const ow = document.getElementById('opts-wrap');
+  ow.innerHTML = '';
+  q.opts.forEach((o, i) => {
+    const labels = ['A','B','C','D'];
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.innerHTML = `<span class="opt-label">${labels[i]}</span>${o}`;
+    btn.onclick = () => answer(i);
+    ow.appendChild(btn);
+  });
+}
 
-        document.getElementById('explanation-text').innerHTML = `<strong>${isCorrect ? '✅ 答對了！' : '❌ 答錯了'}</strong><br>${q.exp}`;
-        document.getElementById('explanation-box').classList.remove('hidden');
-        btns.forEach(b => b.disabled = true);
-    }
+function answer(sel) {
+  const q = DB[topic].questions[idx];
+  const correct = sel === q.ans;
+  records.push({ q:q.q, cat:q.cat, chosen:q.opts[sel], correct_ans:q.opts[q.ans], ok:correct, exp:q.exp });
 
-    document.getElementById('next-btn').onclick = function() {
-        currentIdx++;
-        if (currentIdx < quizData.length) { showQuestion(); } 
-        else { showFinalReport(); }
-    };
+  const btns = document.querySelectorAll('.opt');
+  btns.forEach((b,i) => {
+    b.disabled = true;
+    if (i === q.ans) b.classList.add('correct');
+    else if (i === sel && !correct) b.classList.add('wrong');
+  });
 
-    function showFinalReport() {
-        document.getElementById('quiz-screen').classList.add('hidden');
-        document.getElementById('result-screen').classList.remove('hidden');
-        
-        const score = userRecords.filter(r => r.isCorrect).length;
-        document.getElementById('student-info-display').innerHTML = `
-            <div style="display:flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong>學生：</strong>${name} <br>
-                    <strong>學號：</strong>${sid}
-                </div>
-                <div style="text-align:right;">
-                    <span style="font-size: 1.2rem; font-weight:bold; color:var(--accent-color);">得分：${score} / ${quizData.length}</span>
-                </div>
-            </div>
-        `;
+  const ew = document.getElementById('exp-wrap');
+  ew.innerHTML = `
+    <div class="exp-box ${correct?'exp-correct':'exp-wrong'}">
+      <div class="exp-title">${correct ? '✅ 答對了！' : '❌ 答錯了'}</div>
+      <div class="exp-body">💡 <strong>臨床解析：</strong>${q.exp}</div>
+      <button class="btn btn-${topic}" style="margin-top:.8rem;" onclick="nextQ()">
+        ${idx+1 < DB[topic].questions.length ? '下一題 →' : '查看學習報告 →'}
+      </button>
+    </div>`;
+}
 
-        const content = document.getElementById('report-content');
-        content.innerHTML = "";
-        userRecords.forEach((r, idx) => {
-            content.innerHTML += `
-                <div class="report-item">
-                    <div class="report-q">${idx + 1}. ${r.question}</div>
-                    <div class="report-ans">
-                        <span class="tag ${r.isCorrect ? 'tag-correct' : 'tag-wrong'}">${r.isCorrect ? 'Correct' : 'Incorrect'}</span>
-                        選擇：${r.userAns}
-                    </div>
-                    ${!r.isCorrect ? `<div class="report-ans" style="color:var(--success-color); font-weight:bold;">➜ 正解：${r.correctAns}</div>` : ''}
-                    <div class="report-exp">💡 臨床解析：${r.exp}</div>
-                </div>
-            `;
-        });
-        document.getElementById('report-time').innerText = "評核時間：" + new Date().toLocaleString();
-    }
+function nextQ() {
+  idx++;
+  if (idx < DB[topic].questions.length) { renderQ(); }
+  else { showResult(); }
+}
 
-    // 生成圖片按鈕
-    document.getElementById('download-btn').onclick = function() {
-        const btn = this;
-        const reportArea = document.getElementById('report-area');
-        btn.innerText = "⏳ 報告圖片生成中...";
-        btn.disabled = true;
+function showResult() {
+  const d = DB[topic];
+  const score = records.filter(r=>r.ok).length;
+  const total = records.length;
+  const pct = Math.round(score/total*100);
+  let emoji = pct>=80?'🎉':pct>=60?'👍':'💪';
+  let msg = pct>=80?'表現優秀！':pct>=60?'繼續加油！':'多複習解析吧！';
 
-        html2canvas(reportArea, {
-            scale: 2,
-            backgroundColor: "#ffffff",
-            scrollX: 0,
-            scrollY: -window.scrollY
-        }).then(canvas => {
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL("image/png");
-            link.download = `RT評核報告_${name}_${sid}.png`;
-            link.click();
-            btn.innerText = "📸 生成完整報告圖片 (傳給老師)";
-            btn.disabled = false;
-        });
-    };
-});
+  document.getElementById('score-circle-wrap').innerHTML = `
+    <div class="score-circle score-bg-${topic}">
+      <span class="score-num">${score}</span>
+      <span class="score-denom">/ ${total}</span>
+    </div>`;
+  document.getElementById('res-title').textContent = `${emoji} ${msg}`;
+  document.getElementById('res-sub').textContent = `正確率 ${pct}%　${d.label} 測驗完成`;
+  document.getElementById('stat-row').innerHTML = `
+    <div class="stat-box"><div class="sv sv-green">${score}</div><div class="sl">答對題數</div></div>
+    <div class="stat-box"><div class="sv sv-red">${total-score}</div><div class="sl">答錯題數</div></div>
+    <div class="stat-box"><div class="sv sv-blue">${pct}%</div><div class="sl">正確率</div></div>`;
+
+  const other = topic==='tbi'?'sci':'tbi';
+  const ob = document.getElementById('btn-other');
+  ob.textContent = `切換至 ${DB[other].icon} ${DB[other].label} 測驗`;
+  ob.onclick = () => { topic=other; selectTopic(other); };
+
+  // Build report
+  document.getElementById('rpt-header-bar').className = `report-header-bar rh-${topic}`;
+  document.getElementById('rpt-meta').innerHTML = `${d.icon} ${d.label}　學生：${uname}　學號：${usid}`;
+  document.getElementById('rpt-score-big').innerHTML = `<span style="color:var(--${topic})">${score} / ${total}（${pct}%）</span>`;
+  document.getElementById('rpt-time').textContent = '評核時間：' + new Date().toLocaleString();
+
+  const ri = document.getElementById('rpt-items');
+  ri.innerHTML = records.map((r,i)=>`
+    <div class="report-item">
+      <div class="ri-q">${i+1}. ${r.q}</div>
+      <div class="ri-ans"><span class="tag ${r.ok?'tag-ok':'tag-ng'}">${r.ok?'Correct':'Incorrect'}</span> 選擇：${r.chosen}</div>
+      ${!r.ok?`<div class="ri-ans" style="color:var(--success);font-weight:700;">➜ 正解：${r.correct_ans}</div>`:''}
+      <div class="ri-exp">💡 臨床解析：${r.exp}</div>
+    </div>`).join('');
+
+  show('s-result');
+}
+
+function downloadReport() {
+  const btn = document.querySelector('[onclick="downloadReport()"]');
+  btn.textContent = '⏳ 生成中...'; btn.disabled = true;
+  html2canvas(document.getElementById('report-capture'), {
+    scale:2, backgroundColor:'#ffffff', scrollX:0, scrollY:-window.scrollY
+  }).then(canvas => {
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `RT學習報告_${DB[topic].label}_${uname}_${usid}.png`;
+    a.click();
+    btn.textContent = '📥 下載學習報告（複習用）'; btn.disabled = false;
+  });
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
 </script>
 </body>
 </html>
