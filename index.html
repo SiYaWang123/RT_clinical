@@ -104,8 +104,8 @@
 <div class="wrap">
   <!-- S1: Welcome -->
   <div id="s-welcome" class="card">
-    <h1>🩺 RT 臨床評核預習網頁</h1>
-    <p class="desc">歡迎使用本系統！本系統旨在提供呼吸治療實習學生，針對特定疾病(急性腦傷（TBI）與脊髓損傷（SCI）)的呼吸相關處置進行臨床學理與專業態度的情境模擬與預習。</p>
+    <h1>🩺 RT 臨床情境、知識預習網頁</h1>
+    <p class="desc">歡迎使用！本網頁旨在提供呼吸治療實習學生，針對特定疾病(急性腦傷（TBI）與脊髓損傷（SCI）)的呼吸相關處置進行臨床學理與專業態度的情境模擬與預習。</p>
     
     <div class="form-group">
       <label for="username">姓名</label>
@@ -147,9 +147,9 @@
   <div id="s-result" class="hide">
     <div id="report-capture" class="report-card">
       <div class="rpt-header">
-        <div class="rpt-title">📋 臨床技能與知識評核報告書</div>
+        <div class="rpt-title">📋 臨床技能與知識彙總答題頁面</div>
         <div class="rpt-meta" id="rpt-meta-info">姓名：-　學校：-</div>
-        <p style="font-size: 0.85rem; color: var(--muted); margin-top: 5px;">本報告由 RT 臨床評核網頁自動生成</p>
+        <p style="font-size: 0.85rem; color: var(--muted); margin-top: 5px;">本報告由答題網頁自動生成</p>
       </div>
 
       <div class="rpt-score-grid">
@@ -173,8 +173,8 @@
     </div>
 
     <div class="actions-row">
-      <button class="btn btn-dl" onclick="downloadReport()">💾 下載評核報告圖檔</button>
-      <button class="btn btn-restart" onclick="restart()">🔄 重新開始評核</button>
+      <button class="btn btn-dl" onclick="downloadReport()">💾 下載報告圖檔</button>
+      <button class="btn btn-restart" onclick="restart()">🔄 重新開始答題</button>
     </div>
   </div>
 </div>
@@ -667,7 +667,7 @@ function startQuiz(topic) {
   const usid = document.getElementById('userid').value.trim();
   
   if(!uname || !usid) {
-    alert('請填寫姓名與學號 / 員工代號！');
+    alert('請填寫姓名與學校！');
     return;
   }
   
@@ -685,7 +685,7 @@ function startQuiz(topic) {
   userAnswers = new Array(currentQuestions.length).fill(null);
   
   // 設定 UI 標題
-  document.getElementById('quiz-topic-title').textContent = topic === 'tbi' ? '🧠 急性腦傷（TBI）呼吸管理評核' : '♿ 脊髓損傷（SCI）呼吸生理與照護評核';
+  document.getElementById('quiz-topic-title').textContent = topic === 'tbi' ? '🧠 急性腦傷（TBI）臨床照護' : '♿ 脊髓損傷（SCI）臨床照護';
   
   renderQuestion();
   show('s-quiz');
@@ -835,8 +835,8 @@ function finishQuiz() {
   const pct = Math.round((score / total) * 100);
   
   // 繪製最終評核報告
-  document.getElementById('rpt-topic-name').textContent = currentTopic === 'tbi' ? '急性腦傷 (TBI) 呼吸管理' : '脊髓損傷 (SCI) 呼吸生理與照護';
-  document.getElementById('rpt-meta-info').textContent = `姓名：${uname}　學號 / 工號：${usid}`;
+  document.getElementById('rpt-topic-name').textContent = currentTopic === 'tbi' ? '急性腦傷 (TBI) 臨床照護' : '脊髓損傷（SCI）臨床照護';
+  document.getElementById('rpt-meta-info').textContent = `姓名：${uname}　學校：${usid}`;
   document.getElementById('rpt-score-big').innerHTML = `<span style="color:var(--${currentTopic})">${score} / ${total}（${pct}%）</span>`;
   document.getElementById('rpt-time').textContent = '評核時間：' + new Date().toLocaleString();
 
@@ -862,11 +862,11 @@ function downloadReport() {
     a.href = canvas.toDataURL('image/png');
     a.download = `RT_臨床評核報告_${document.getElementById('username').value.trim() || '學生'}.png`;
     a.click();
-    btn.textContent = '💾 下載評核報告圖檔'; btn.disabled = false;
+    btn.textContent = '💾 下載答題報告圖檔'; btn.disabled = false;
   }).catch(err => {
     console.error(err);
     alert('下載失敗，請嘗試手動螢幕截圖。');
-    btn.textContent = '💾 下載評核報告圖檔'; btn.disabled = false;
+    btn.textContent = '💾 下載答題報告圖檔'; btn.disabled = false;
   });
 }
 
