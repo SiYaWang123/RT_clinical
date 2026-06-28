@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>呼吸治療實習生臨床情境與知識答題網頁</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
     --tbi: #e74c3c; --tbi-light: #fdecea; --tbi-dark: #c0392b;
@@ -20,60 +21,56 @@
   .card { background: var(--card); border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); margin-bottom: 20px; }
   h1 { text-align: center; color: var(--text); margin-bottom: 25px; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .desc { font-size: 0.95rem; color: var(--muted); line-height: 1.6; margin-bottom: 20px; text-align: center; }
-  
   .form-group { margin-bottom: 15px; }
   .form-group label { display: block; font-weight: 700; margin-bottom: 5px; color: var(--text); font-size: 0.9rem; }
   .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; outline: none; transition: border 0.2s; }
   .form-group input:focus { border-color: var(--active); }
-
-  .topic-btn { display: block; width: 100%; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: 700; text-align: center; cursor: pointer; border: none; transition: all 0.2s; margin-bottom: 12px; text-decoration: none; }
+  .topic-btn { display: block; width: 100%; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: 700; text-align: center; cursor: pointer; border: none; transition: all 0.2s; margin-bottom: 12px; }
   .btn-tbi { background: var(--tbi-light); color: var(--tbi-dark); border: 1px solid var(--tbi); }
   .btn-tbi:hover { background: var(--tbi); color: #fff; }
   .btn-sci { background: var(--sci-light); color: var(--sci-dark); border: 1px solid var(--sci); }
   .btn-sci:hover { background: var(--sci); color: #fff; }
-
+  .settings-toggle { font-size: 0.85rem; color: var(--muted); cursor: pointer; text-align: center; margin-top: 10px; user-select: none; }
+  .settings-toggle:hover { color: var(--active); }
+  .settings-panel { display: none; margin-top: 14px; padding: 14px; background: #f8f9fa; border-radius: 8px; border: 1px solid var(--border); font-size: 0.88rem; }
+  .settings-panel.open { display: block; }
+  .settings-panel label { font-weight: 700; color: var(--text); display: block; margin-bottom: 5px; }
+  .settings-panel input { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; outline: none; }
+  .settings-panel input:focus { border-color: var(--active); }
+  .settings-panel .hint { font-size: 0.78rem; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+  .settings-panel .hint a { color: var(--active); }
+  .setup-steps { margin-top: 10px; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid var(--border); }
+  .setup-steps p { font-weight: 700; color: var(--text); margin-bottom: 6px; font-size: 0.82rem; }
+  .setup-steps ol { padding-left: 16px; color: var(--muted); font-size: 0.78rem; line-height: 1.8; }
+  .setup-steps code { background: #e8f0fe; color: #1a73e8; padding: 1px 4px; border-radius: 3px; font-size: 0.78rem; }
   .nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
   .nav-title { font-weight: 700; font-size: 1.1rem; }
   .progress-bar-container { background: var(--border); height: 8px; border-radius: 4px; width: 100%; margin-bottom: 20px; overflow: hidden; }
   .progress-bar { height: 100%; transition: width 0.3s; }
-
   .q-container { display: none; }
   .q-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; margin-bottom: 10px; }
   .badge-k { background: #ffeaa7; color: #d63031; }
   .badge-s { background: #fab1a0; color: #e17055; }
   .badge-a { background: #81ecec; color: #00cec9; }
   .q-text { font-size: 1.05rem; font-weight: 700; color: var(--text); line-height: 1.5; margin-bottom: 15px; }
-  
   .opt { display: flex; align-items: center; padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; line-height: 1.4; color: var(--text); }
   .opt:hover { background: #f8f9fa; border-color: var(--muted); }
   .opt.selected { background: #e8f4fd; border-color: var(--active); font-weight: 700; }
-  
-  /* 已作答狀態之選項樣式 */
   .opt.disabled { cursor: not-allowed; pointer-events: none; }
   .opt.correct { background: #e8f5e9 !important; border-color: #27ae60 !important; color: #1e7e34 !important; font-weight: 700; }
   .opt.correct .opt-idx { background: #27ae60 !important; color: white !important; }
   .opt.incorrect { background: #fdecea !important; border-color: #e74c3c !important; color: #c0392b !important; }
   .opt.incorrect .opt-idx { background: #e74c3c !important; color: white !important; }
-
   .opt-idx { font-weight: 700; margin-right: 10px; background: var(--border); width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; border-radius: 50%; font-size: 0.85rem; flex-shrink: 0; }
   .opt.selected .opt-idx { background: var(--active); color: white; }
-
-  /* 即時解析盒起動畫 */
-  .explanation-box {
-    animation: slideDown 0.3s ease-out;
-  }
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
+  .explanation-box { animation: slideDown 0.3s ease-out; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
   .act-btns { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
   .btn { padding: 10px 20px; border-radius: 6px; font-size: 0.95rem; font-weight: 700; cursor: pointer; border: none; transition: background 0.2s; display: flex; align-items: center; gap: 5px; }
   .btn-prev { background: #e0e6ed; color: #2c3e50; }
   .btn-prev:hover { background: #d1d8e0; }
   .btn-next { background: var(--active); color: white; }
   .btn-next:hover { background: #2980b9; }
-
   .report-card { background: white; border-radius: 12px; border: 2px solid var(--border); padding: 30px; margin-bottom: 20px; }
   .rpt-header { text-align: center; border-bottom: 2px dashed var(--border); padding-bottom: 20px; margin-bottom: 20px; }
   .rpt-title { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-bottom: 5px; }
@@ -89,33 +86,36 @@
   .tag-ok { background: #d4edda; color: #155724; }
   .tag-ng { background: #f8d7da; color: #721c24; }
   .ri-exp { font-size: 0.85rem; color: #57606f; background: #f1f2f6; padding: 10px; border-radius: 6px; line-height: 1.5; margin-top: 5px; border-left: 3px solid #ced6e0; }
-
-  .actions-row { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
-  .btn-dl { background: var(--success); color: white; width: 100%; justify-content: center; padding: 12px; font-size: 1rem; }
+  .actions-row { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+  .btn-dl { background: var(--success); color: white; flex: 1; min-width: 140px; justify-content: center; padding: 12px; font-size: 1rem; }
   .btn-dl:hover { background: #219653; }
-  .btn-restart { background: #7f8c8d; color: white; width: 100%; justify-content: center; padding: 12px; font-size: 1rem; }
+  .btn-upload { background: #4285f4; color: white; flex: 1; min-width: 140px; justify-content: center; padding: 12px; font-size: 1rem; }
+  .btn-upload:hover { background: #3367d6; }
+  .btn-restart { background: #7f8c8d; color: white; flex: 1; min-width: 140px; justify-content: center; padding: 12px; font-size: 1rem; }
   .btn-restart:hover { background: #6f7c7d; }
-  
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #2c3e50; color: white; padding: 12px 24px; border-radius: 8px; font-size: 0.9rem; font-weight: 700; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
   .hide { display: none !important; }
 </style>
 </head>
 <body>
-
 <div class="wrap">
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
   <!-- S1: Welcome -->
   <div id="s-welcome" class="card">
-    <h1>🩺  呼吸治療實習生臨床情境與知識答題網頁</h1>
-    <p class="desc">歡迎使用！本網頁旨在提供呼吸治療實習學生，針對特定疾病(急性腦傷（TBI）與脊髓損傷（SCI）)的呼吸相關處置進行臨床學理與專業態度的情境模擬與預習。</p>
-    
+    <h1>🩺 呼吸治療實習生臨床情境與知識答題網頁</h1>
+    <p class="desc">歡迎使用！本網頁旨在提供呼吸治療實習學生，針對急性腦傷（TBI）與脊髓損傷（SCI）的呼吸相關處置進行臨床學理與專業態度的情境模擬與預習。</p>
     <div class="form-group">
       <label for="username">姓名</label>
-      <input type="text" id="username" placeholder="請輸入姓名" value="">
+      <input type="text" id="username" placeholder="請輸入姓名">
     </div>
     <div class="form-group">
       <label for="userid">學校</label>
-      <input type="text" id="userid" placeholder="請輸入學校" value="">
+      <input type="text" id="userid" placeholder="請輸入學校">
     </div>
-    
     <div style="margin-top: 25px;">
       <p style="font-size: 0.9rem; font-weight: 700; color: var(--text); margin-bottom: 10px; text-align: center;">請選擇評核主題</p>
       <button class="topic-btn btn-tbi" onclick="startQuiz('tbi')">🧠 急性腦損傷（TBI）</button>
@@ -132,11 +132,7 @@
     <div class="progress-bar-container">
       <div class="progress-bar" id="quiz-progress-bar" style="width: 0%;"></div>
     </div>
-
-    <div id="q-area">
-      <!-- Question will be rendered here -->
-    </div>
-
+    <div id="q-area"></div>
     <div class="act-btns">
       <button class="btn btn-prev" onclick="prevQ()">⬅️ 上一題</button>
       <button class="btn btn-next" onclick="nextQ()">下一題 ➡️</button>
@@ -151,7 +147,6 @@
         <div class="rpt-meta" id="rpt-meta-info">姓名：-　學校：-</div>
         <p style="font-size: 0.85rem; color: var(--muted); margin-top: 5px;">本報告由答題網頁自動生成</p>
       </div>
-
       <div class="rpt-score-grid">
         <div class="score-box" style="background: #fafbfc;">
           <div style="font-size: 0.85rem; font-weight: 700; color: var(--muted);">評核單元</div>
@@ -162,28 +157,23 @@
           <div class="score-val" id="rpt-score-big">-</div>
         </div>
       </div>
-
       <div id="rpt-time" style="font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; text-align: right;">-</div>
-
       <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-left: 4px solid var(--active); padding-left: 10px; margin-bottom: 15px;">評核題型詳情</h3>
-      
-      <div id="rpt-items">
-        <!-- Rendered results -->
-      </div>
+      <div id="rpt-items"></div>
     </div>
-
     <div class="actions-row">
-      <button class="btn btn-dl" onclick="downloadReport()">💾 下載報告圖檔</button>
-      <button class="btn btn-restart" onclick="restart()">🔄 重新開始答題</button>
+      <button class="btn btn-dl" onclick="downloadPDF()">📄 下載 PDF 報告</button>
+      <button class="btn btn-restart" onclick="restart()">🔄 重新開始</button>
     </div>
   </div>
 </div>
 
 <script>
-// Questions DB (重新排序打散答案分布，確保 ans 分配於 a, b, c, d 中)
+// ─── Questions ────────────────────────────────────────────────────────────────
 const questions = {
   tbi: {
     knowledge: [
+      // K1 (unchanged)
       {
         q: "對於嚴重急性腦傷（ABI）合併急性呼吸窘迫症候群（ARDS）患者，在沒有顱內壓（ICP）升高的情況下，關於 PEEP 的設定，下列何者正確？",
         a: "應完全禁用 PEEP，以防止胸腔內壓上升阻礙靜脈回流而導致 ICP 升高",
@@ -193,33 +183,37 @@ const questions = {
         ans: "c",
         exp: "根據歐洲重症醫學會（ESICM）共識，若急性腦傷（ABI）患者無顯著 ICP 升高，其 PEEP 設定與無腦傷之一般患者相同（即採取標準肺保護策略），通常在密切監測下維持適當 PEEP 以確保氧合，避免缺氧造成的二次腦損傷。"
       },
+      // K2 NEW: Head position & ICP
       {
-        q: "對於嚴重創傷性腦傷（TBI）患者，當顱內壓（ICP）突然升高（> 22 mmHg）且出現腦疝(Brain herniation)跡象時，採取「短暫性過度通氣（hyperventilation）」的主要生理機轉與原則為何？",
-        a: "透過升高 PaCO2 引起腦血管舒張，進而增加腦氧合並降低顱內壓，目標 PaCO2 > 50 mmHg",
-        b: "透過降低 PaCO2 引起腦血管收縮，進而減少腦血流量（CBF）及顱內壓，但應避免 PaCO2 < 25 mmHg",
-        c: "透過減少潮氣量以降低胸腔內壓，間接降低顱內壓，不需理會 PaCO2 變化",
-        d: "過度通氣會增加腦血流量，故應作為長期的預防性治療，目標 PaCO2 持續維持在 20 mmHg",
+        q: "對於嚴重急性腦傷（ABI）患者，臨床上常規抬高床頭（Head-of-Bed, HOB）30–45° 的主要生理目的與依據為何？",
+        a: "抬高床頭主要是為了增加腦部動脈血流灌注，透過重力使更多動脈血液流向大腦",
+        b: "抬高床頭 30–45° 能促進頸靜脈回流、降低顱內靜脈壓，從而有效降低顱內壓（ICP），同時不顯著影響腦灌注壓（CPP）",
+        c: "主要目的是預防褥瘡，與顱內壓及腦部血流無生理相關",
+        d: "應常規擺平床頭（0°），以最大化腦部靜脈回流並降低顱內壓",
         ans: "b",
-        exp: "過度通氣會降低 PaCO2，導致腦部血管收縮、減少腦血流量（CBF），從而快速降低顱內壓。然而，這會增加腦缺血的風險，故僅能「短暫性」使用於急性腦疝或 ICP 嚴重升高危及生命時。指引建議除非有腦氧合監測，否則不應使 PaCO2 低於 25-30 mmHg。"
+        exp: "抬高床頭 30–45° 可透過重力改善頸靜脈（Jugular Vein）回流，降低顱內靜脈壓與硬腦膜靜脈竇壓，進而有效降低顱內壓（ICP）。但需注意，過度抬高（> 45°）可能因降低平均動脈壓（MAP）而使腦灌注壓（CPP）下降，故建議維持 30–45° 為最佳擺位角度，並同步監測 ICP 與 CPP 的變化。"
       },
+      // K3 (unchanged)
       {
         q: "針對嚴重急性腦傷（ABI）患者，其動脈血氧分壓（PaO2）與血氧飽和度（SpO2）的目標範圍，下列何者最適當？",
-        a: "PaO2 55 - 80 mmHg，SpO2 88 - 92%",
+        a: "PaO2 55–80 mmHg，SpO2 88–92%",
         b: "PaO2 > 150 mmHg，SpO2 100%",
-        c: "PaO2 60 - 70 mmHg，SpO2 90 - 93%",
-        d: "PaO2 80 - 120 mmHg，SpO2 ≥ 95%",
+        c: "PaO2 60–70 mmHg，SpO2 90–93%",
+        d: "PaO2 80–120 mmHg，SpO2 ≥ 95%",
         ans: "d",
-        exp: "根據歐洲重症醫學會（ESICM）共識指引，急性腦傷（ABI）患者之血氧目標應維持 PaO2 在 80-120 mmHg，SpO2 ≥ 95%，以避免低血氧（PaO2 < 60 mmHg）導致之繼發性腦部缺氧損傷，同時避免組織氧過高（hyperoxia）產生的自由基傷害與血管痙攣。"
+        exp: "根據歐洲重症醫學會（ESICM）共識指引，急性腦傷（ABI）患者之血氧目標應維持 PaO2 在 80–120 mmHg，SpO2 ≥ 95%，以避免低血氧（PaO2 < 60 mmHg）導致之繼發性腦部缺氧損傷，同時避免組織氧過高（hyperoxia）產生的自由基傷害與血管痙攣。"
       },
+      // K4 (unchanged)
       {
         q: "在重症加護病房中，預防急性腦傷患者發生二次腦損傷（secondary brain injury），關於全身血液動力學與腦灌注壓（CPP）的目標，下列何者正確？",
-        a: "應維持平均動脈壓（MAP）以確保腦灌注壓（CPP）維持在 60 - 70 mmHg 之間，避免腦部灌注不足或過度充血",
-        b: "為了將腦水腫降至最低，應刻意維持 CPP 在 40 - 50 mmHg 的極低水平",
+        a: "應維持平均動脈壓（MAP）以確保腦灌注壓（CPP）維持在 60–70 mmHg 之間，避免腦部灌注不足或過度充血",
+        b: "為了將腦水腫降至最低，應刻意維持 CPP 在 40–50 mmHg 的極低水平",
         c: "應常規將收縮壓（SBP）降至 90 mmHg 以下，以防顱內出血擴大",
         d: "CPP 應維持得越高越好（如 > 100 mmHg），以確保腦細胞能得到足夠的灌注",
         ans: "a",
-        exp: "根據創傷重症指引，嚴重創傷性腦傷（TBI）患者應維持腦灌注壓（CPP）在 60-70 mmHg。CPP過低（< 50 mmHg）會導致腦部灌注不足與缺血；CPP過高（> 70 mmHg）則可能引發或加重血管源性腦水腫及急性呼吸窘迫症候群（ARDS）。"
+        exp: "根據創傷重症指引，嚴重創傷性腦傷（TBI）患者應維持腦灌注壓（CPP）在 60–70 mmHg。CPP 過低（< 50 mmHg）會導致腦部灌注不足與缺血；CPP 過高（> 70 mmHg）則可能引發或加重血管源性腦水腫及急性呼吸窘迫症候群（ARDS）。"
       },
+      // K5 (unchanged)
       {
         q: "嚴重創傷性腦傷（TBI）患者在氣道保護與呼吸器脫離過程中，對於氣管切開術（Tracheostomy）時機的共識建議，下列敘述何者最適當？",
         a: "所有創傷性腦傷病患無論嚴重度，皆應在插管當天立即執行氣切術",
@@ -227,8 +221,9 @@ const questions = {
         c: "無論如何都應嘗試插管通氣 21 天以上，唯有拔管失敗滿 3 次才能考慮執行氣切",
         d: "氣切手術會顯著增加顱內壓（ICP）與腦壓惡化，因而是腦傷患者的絕對禁忌症",
         ans: "b",
-        exp: "根據 CENTER-TBI 大型研究與重症指引，對於預估需要長期（> 10-14 天）人工氣道的嚴重腦傷患者，早期氣切（早期為 7 天內）能顯著縮短呼吸器使用時間、調降呼吸道阻力、便於痰液清除並減少呼吸道死腔，進而調降加護病房住院天數與肺部感染率。"
+        exp: "根據 CENTER-TBI 大型研究與重症指引，對於預估需要長期（> 10–14 天）人工氣道的嚴重腦傷患者，早期氣切（7 天內）能顯著縮短呼吸器使用時間、調降呼吸道阻力、便於痰液清除並減少呼吸道死腔，進而調降加護病房住院天數與肺部感染率。"
       },
+      // K6 (unchanged)
       {
         q: "關於嚴重創傷性腦傷（TBI）患者在重症照護期間的紅血球輸血（blood transfusion）指引，下列敘述何者最適當？",
         a: "應採取極度嚴格的輸血策略，僅在血紅素 Hb < 5 g/dL 時才考慮輸血，以避免任何輸血相關肺損傷（TRALI）",
@@ -238,24 +233,27 @@ const questions = {
         ans: "c",
         exp: "根據急性腦傷重症管理建議，由於腦部組織對缺氧極為敏感，維持足夠的動脈血氧含量（CaO2）與腦氧遞送至關重要。一般重症雖採嚴格輸血（Hb < 7 g/dL），但在 TBI 患者常建議採取寬鬆輸血策略（通常維持血紅素 Hb ≥ 9 g/dL），以防貧血引發繼發性腦部缺氧損傷。"
       },
+      // K7 NEW: VAP prevention bundle (general ICU)
       {
-        q: "在嚴重創傷性腦傷（TBI）合併重度急性呼吸窘迫症候群（ARDS）患者中，關於神經肌肉阻斷劑（NMBA，如肌肉鬆弛劑）的使用原則，下列敘述何者最符合重症指引（ESICM）建議？",
-        a: "為了減少重症肌肉萎縮，應完全禁用 NMBA，改用大劑量嗎啡進行鎮靜止痛",
-        b: "應常規、無條件連續給予 NMBA 至少 72 小時，無論有無人機不協調或 ICP 上升",
-        c: "NMBA 僅能用於氣管插管時，一旦插管完成便不能繼續使用",
-        d: "當患者出現嚴重人機不協調、過度通氣導致潮氣量過高，或伴隨難治性顱內壓上升（ICP > 22 mmHg）時，可在適當鎮靜下考慮短期使用 NMBA",
-        ans: "d",
-        exp: "歐洲重症醫學會（ESICM）腦傷呼吸支持共識指出，不建議常規或常規持續輸注 NMBA；然而，在 ABI 合併嚴重 ARDS、嚴重人機對抗，或鎮靜已達極限仍有難治性 ICP 升高的患者，可考慮合併適當鎮靜給予「短期」NMBA 以穩定肺通氣並調降 ICP。"
+        q: "在加護病房中，長期使用機械通氣的患者容易發生「呼吸器相關肺炎（VAP）」，是導致 ICU 住院天數延長與死亡率上升的重要院內感染。關於 VAP 預防套件（VAP Bundle）的核心策略，下列何者敘述最為正確？",
+        a: "VAP Bundle 僅適用於腦傷患者，其他插管病人感染風險不高，不需要執行",
+        b: "VAP Bundle 的核心策略包括：床頭抬高 30–45°、每日口腔護理（含 Chlorhexidine）、聲門下分泌物抽吸、每日評估脫離機械通氣的可行性",
+        c: "最佳的預防策略是每 12 小時常規更換氣管內管，以清除院內細菌",
+        d: "呼吸器管路應每天更換，以防止冷凝水中細菌增生",
+        ans: "b",
+        exp: "VAP 是加護病房中最常見的院內感染之一，幾乎所有長期插管患者都有風險，並非只限於腦傷患者。VAP Bundle 是一套有實證依據的預防措施組合，包括：床頭抬高 ≥ 30–45°（減少口咽內容物微量吸入）、每日至少 2–4 次口腔護理（含 Chlorhexidine）、聲門下分泌物抽吸、每日評估拔管可行性(Daily SBT)。RT 應主動將 VAP Bundle 落實在每日例行巡查中。"
       },
+      // K8 (unchanged)
       {
-        q: "對於急性重症腦傷患者，使用呼吸器執行腦保護與肺保護通氣策略時，有關氣道高原壓（Plateau Pressure, Pplat）與驅動壓（Driving Pressure, ΔP）的安全指標設定，下列何者正確？",
+        q: "對於急性重症腦部損傷病患，使用呼吸器執行腦保護與肺保護通氣策略時，有關氣道高原壓（Plateau Pressure, Pplat）與驅動壓（Driving Pressure, ΔP）的安全指標設定，下列何者正確？",
         a: "應維持 Pplat ≤ 30 cmH2O，Driving Pressure < 15 cmH2O，以防發生呼吸器相關肺損傷（VILI）及後續全身性發炎引發腦壓惡化",
-        b: "Pplat應控制在 40 cmH2O 以上，以確保肺泡能在高壓力下緊密擴張",
-        c: "為了達到腦保護，只要能排除 CO2，Driving Pressure即使達到 25 cmH2O 也是完全安全的",
+        b: "Pplat 應控制在 40 cmH2O 以上，以確保肺泡能在高壓力下緊密擴張",
+        c: "為了達到腦保護，只要能排除 CO2，Driving Pressure 即使達到 25 cmH2O 也是完全安全的",
         d: "只要 ICP 正常，任何呼吸器壓力的監測與限制在重症醫學上皆無必要",
         ans: "a",
-        exp: "根據腦保護與肺保護策略，維持Pplat ≤ 30 cmH2O 以及Driving Pressure（Pplat - PEEP）< 15 cmH2O 能降低呼吸器相關肺損傷（VILI）。VILI會引發全身性發炎因子釋放，破壞血腦屏障（BBB）並加劇腦水腫與 ICP 惡化。"
+        exp: "根據腦保護與肺保護策略，維持 Pplat ≤ 30 cmH2O 以及 Driving Pressure（Pplat - PEEP）< 15 cmH2O 能降低呼吸器相關肺損傷（VILI）。VILI 會引發全身性發炎因子釋放，破壞血腦屏障（BBB）並加劇腦水腫與 ICP 惡化。"
       },
+      // K9 (unchanged)
       {
         q: "在急性重症腦部損傷病患中，高氧血症（Hyperoxemia，動脈血氧分壓過高）常會引發何種腦血管與生理反應，從而加重腦部繼發性損傷？",
         a: "會引發大腦血管極度擴張，迅速降低顱內壓並增加腦灌注",
@@ -263,19 +261,21 @@ const questions = {
         c: "高氧能顯著調降血糖，對大腦代謝具有優良的保護作用",
         d: "高氧血症能完全消除腦水腫，不需要對吸入氧氣濃度（FiO2）進行任何限制",
         ans: "b",
-        exp: "最新神經重症及歐洲共識皆指出，吸入過高濃度的氧氣（導致 PaO2 > 150-200 mmHg）會促進活性氧自由基（ROS）生成，加重缺血再灌流(Ischemia-Reperfusion Injury)腦損傷。此外，高氧血症會刺激腦部血管收縮，造成局部腦部缺血。"
+        exp: "最新神經重症及歐洲共識皆指出，吸入過高濃度的氧氣（導致 PaO2 > 150–200 mmHg）會促進活性氧自由基（ROS）生成，加重缺血再灌流腦損傷。此外，高氧血症會刺激腦部血管收縮，造成局部腦部缺血。"
       },
+      // K10 NEW: Fever management in TBI
       {
-        q: "急性創傷性腦傷（TBI）患者在加護病房中常需給予鎮靜藥物（Sedatives）。關於常用鎮靜藥物（如 Propofol）對腦部生理與血流動力學的影響，下列敘述何者正確？",
-        a: "Propofol 會顯著調升大腦代謝率，使大腦對氧氣需求增加，故僅能用於輕度腦傷",
-        b: "Propofol 能直接上升平均動脈壓（MAP），從而無條件地提升 CPP",
-        c: "Propofol 能降低大腦代謝率與腦血流量，有助於降低 ICP，但需嚴密監測避免血壓過低導致腦灌注壓（CPP）下降",
-        d: "Propofol 會刺激大腦血管擴張並顯著上升 ICP，臨床上屬於絕對禁忌",
-        ans: "c",
-        exp: "Propofol是神經重症常用的鎮靜劑，它能減少腦氧代謝率（CMRO2）並同時收縮腦血管、減少腦血流量，進而調降顱內壓（ICP）。但 Propofol 的副作用為降低體循環血管阻力與抑制心肌，可能導致 MAP 顯著下降。若體循環血壓過低，反而會使 CPP 下降，故臨床使用時需密切關注血壓與灌注之平衡。"
+        q: "嚴重創傷性腦傷（TBI）患者在重症照護期間若出現體溫過高（Hyperthermia，> 38.5°C），會對腦部繼發性損傷產生何種影響？下列何者最正確？",
+        a: "體溫升高可加速腦部代謝恢復，具有促進神經功能修復的正面效果",
+        b: "高體溫（Fever）會顯著增加腦部代謝需求（CMRO2），加速細胞能量耗竭，並加重腦水腫，是已知的獨立預後惡化因子，應積極以物理降溫或退燒藥物維持正常體溫（Normothermia）",
+        c: "腦傷患者體溫升至 39°C 以下屬可接受範圍，不需任何積極降溫處置",
+        d: "主動低體溫（Therapeutic Hypothermia，目標 33–35°C）已被所有 TBI 指引列為第一線常規治療，應立即施行",
+        ans: "b",
+        exp: "腦傷後發燒（Fever，> 38°C）是嚴重的繼發性腦損傷危險因素。發燒會使腦部代謝率（CMRO2）顯著增加（每升高 1°C，CMRO2 約增加 5–8%），使已受損的大腦能量需求與供應失衡進一步惡化，並增加谷氨酸興奮性毒性、腦水腫、ICP 升高的風險。積極維持正常體溫（Normothermia，目標 36–37.5°C）是腦保護的核心策略。注意：目前指引已不建議常規對所有 TBI 患者採用預防性低體溫治療，因 EUROTHERM3235 等隨機對照試驗顯示其不能改善預後且增加不良事件。"
       }
     ],
     skill: [
+      // S1 (unchanged)
       {
         q: "一名嚴重創傷性腦傷（TBI）患者使用呼吸器，設定為 Volume Control (A/C) 模式，突然出現氣道峰壓（PIP）從 25 cmH2O 急遽上升至 38 cmH2O，而氣道高原壓（Pplat）維持在 22 cmH2O。此時呼吸治療師首要的評估與處置為何？",
         a: "此為肺部順應性（compliance）變差之表現，應立即調低潮氣量並調高 PEEP",
@@ -285,86 +285,95 @@ const questions = {
         ans: "d",
         exp: "氣道峰壓（PIP）升高而氣道高原壓（Pplat）維持不變，代表氣道阻力（Resistance）增加（PIP - Pplat 差值變大）。常見原因為分泌物阻塞、氣管內管折疊或痙攣。首要處置是進行抽痰並排除物理性阻塞。若兩者皆上升，則需考慮肺順應性下降（如氣胸、肺塌陷）。"
       },
+      // S2 NEW: Position change & ICP response
       {
-        q: "針對嚴重腦傷合併顱內壓（ICP）監測的患者，呼吸治療師欲執行肺泡再擴張術（Alveolar Recruitment Maneuver）。下列哪項監測指標最重要且不應超過的警戒值為何？",
-        a: "應密切監測動脈血氧分壓（PaO2），若 PaO2 > 150 mmHg 應立即終止，以防腦血管過度收縮",
-        b: "應密切監測顱內壓（ICP），若 ICP > 22 mmHg 或腦灌注壓（CPP） < 60 mmHg，應立即中止操作並恢復原設定",
-        c: "應監測氣道峰壓，只要 PIP 不超過 30 cmH2O 即可安全執行，不需監測 ICP",
-        d: "應監測心跳速率，若 HR < 100 bpm 應立即給予阿托品（Atropine）並停止操作",
-        ans: "b",
-        exp: "Recruitment Maneuver會顯著增加胸腔內壓，可能阻礙腦靜脈回流、調降腦灌注壓（CPP）並引發 ICP 升高。在腦傷患者執行肺泡再擴張術時，必須有 ICP 監測，且維持 ICP < 22 mmHg、CPP ≥ 60 mmHg 為原則，一旦超過界限應立刻停止。"
+        q: "一名嚴重腦傷（TBI）患者目前使用呼吸器，在進行例行體位翻身過程中，ICP 監測顯示 ICP 從 14 mmHg 短暫升至 22 mmHg，持續約 1 分鐘後自行恢復至 16 mmHg。針對此現象，下列處置何者最適當？",
+        a: "永久停止所有體位翻身，以避免 ICP 升高，即使這可能造成壓瘡",
+        b: "忽略 ICP 變化，繼續每 2 小時常規翻身，不需任何調整",
+        c: "此屬翻身引起的暫時性 ICP 反應，恢復速度正常；未來操作可採緩慢分段翻身，並在 ICP 完全恢復基線後再進行下一步，同時持續記錄每次翻身的 ICP 反應",
+        d: "立即停止翻身並通報醫師，建議緊急神經外科手術干預",
+        ans: "c",
+        exp: "體位翻身是預防壓瘡的必要護理，但對腦傷患者會引起短暫的 ICP 反應（因體位改變影響腦靜脈回流及胸腔壓力）。若 ICP 在操作後 1–2 分鐘能自行恢復正常範圍（< 22 mmHg），通常代表腦血管自動調節功能尚可，可繼續翻身。預防措施包括：採緩慢分段翻身、側躺角度不超過 30°、在 ICP 回到基線值後再繼續下一步動作，並記錄每次 ICP 反應。若 ICP 持續超過 22 mmHg 超過 5 分鐘應立即停止並通報。"
       },
+      // S3 (unchanged)
       {
         q: "呼吸治療師在評估腦傷患者是否能脫離呼吸器（weaning）時，除了傳統的 RSBI < 105，哪一項臨床指標是對於腦傷患者關鍵的預測因素？",
         a: "患者的四肢肌肉力量（如 MRC 分數須達到 60 分滿分）",
-        b: "必須在完全不給任何止痛 or 鎮靜劑的情況下，自主呼吸維持 48 小時",
+        b: "必須在完全不給任何止痛或鎮靜劑的情況下，自主呼吸維持 48 小時",
         c: "氣道保護能力與意識狀態（如 GCS ≥ 8，具備良好的咳嗽反射、吞嚥功能，且分泌物量少）",
         d: "患者能口頭回答關於時間、地點及人物的提問，表示認知功能完全恢復",
         ans: "c",
         exp: "腦傷病患脫離呼吸器失敗的主因往往不是呼吸肌無力，而是因為神經學功能受損，導致無法有效保護氣道（缺乏吞嚥與咳嗽反射，分泌物過多）。因此，GCS ≥ 8、良好的咳嗽強度與吞嚥能力，是預測成功拔管的關鍵指標。"
       },
+      // S4 NEW: EVD 基本功能與 RT 照護注意事項
       {
-        q: "嚴重創傷性腦傷病患使用機械通氣時，若出現頻繁的雙重觸發（Double triggering，人機不協調的一種）。此現象對腦傷患者之 ICP 有何潛在危害？RT 應如何第一時間調整呼吸器設定？",
-        a: "雙重觸發會使潮氣量疊加，造成經肺壓與胸內壓上升，阻礙腦靜脈回流使 ICP 上升。RT 應評估病患吸氣驅動力，適度增加吸氣時間或潮氣容積，或在醫師評估下增加鎮靜劑使用",
-        b: "雙重觸發能使 PaCO2 迅速降至極低，有助於控制腦壓，不需做任何設定調整",
-        c: "此為 PEEP 不足表現，應立即調高PEEP值 ",
-        d: "應直接將模式切換為 CPAP，讓患者自主呼吸以下降人機對抗的情形",
-        ans: "a",
-        exp: "Double triggering 指的是患者吸氣demand大，呼吸器在一次吸氣尚未結束或呼氣極短時連續送氣兩次。這會造成「容積疊加」（breath stacking），使潮氣量加倍、胸腔內壓增加。這會阻礙靜脈回流、使 ICP 升高。RT 應調整流速或吸氣時間以匹配患者吸氣需求，必要時調整臨床鎮靜深度。"
-      },
-      {
-        q: "在急性重度顱內壓增高（ICP 達 28 mmHg）且懷疑有早期顳葉鉤回疝（Uncal Herniation）的緊急情境下，若要利用呼吸器進行暫時性的過度通氣，下列哪一項操作步驟與目標設定最正確？",
-        a: "持續降低通氣，將 PaCO2 升至 60 mmHg，利用酸中毒來擴張腦血管",
-        b: "調升呼吸速率（RR）或潮氣量，目標將 PaCO2 控制在 30 - 35 mmHg，密切監測 ICP 反應，且在腦疝徵象緩解後應盡快調回常規設定",
-        c: "調整 FiO2 至 100%，並連續執行肺泡再擴張術（Recruitment Maneuver）10 分鐘，監測血氧變化",
-        d: "調整呼吸器通氣量，使 PaCO2 降至 20 mmHg 以下，且至少維持 72 小時",
+        q: "一名嚴重創傷性腦傷患者完成神經外科手術後返回 ICU，並置放腦室外引流管（External Ventricular Drain, EVD）。關於 EVD 的臨床目的，以及呼吸治療師在照護此類患者時應注意的事項，下列何者最正確？",
+        a: "EVD 主要是補充腦脊液（CSF）的裝置，與顱內壓監測無關；RT 執行任何操作時不需特別注意",
+        b: "EVD 是置入腦室的引流管，主要目的是引流腦脊液（CSF）以降低顱內壓（ICP），並提供連續性 ICP 數值監測；RT 在執行抽痰、翻身或肺部復健前，應先確認目前 ICP 數值是否穩定，操作後觀察 ICP 反應，避免觸發顱內壓突升",
+        c: "EVD 置放後，病患 ICP 會永久維持在正常範圍，RT 不需再關注 ICP 監測數值",
+        d: "EVD 引流管的高度不影響引流效果，可隨意調整床頭角度而不需通報護理師",
         ans: "b",
-        exp: "當患者發生腦疝危象（如瞳孔不等大、去皮質/去強直姿勢）時，進行過度通氣（Hyperventilation）是暫時性措施。目標是將 PaCO2 調至 30-35 mmHg。低碳酸血症會收縮腦小動脈、減少腦血流量並降低腦壓。但因為這有引發嚴重腦部局部缺血的風險，故必須在 ICP 穩定或腦疝徵象緩解後，立即在數小時內逐步撤離過度通氣，恢復常規目標。"
+        exp: "EVD（腦室外引流管）是神經重症 ICP 管理的重要工具，由神經外科置入側腦室，用途有二：(1) 持續監測顱內壓（ICP）；(2) 視需要開放引流腦脊液（CSF）以降低 ICP。EVD 引流高度以「外耳孔（耳屏）」為零參考點，對應腦室 Monro 孔的高度，因此床頭角度的改變會影響引流速度與 ICP 讀值，調整前需通報護理師。RT 照護重點：執行抽痰、體位翻身等可能引發 ICP 升高的操作前，先確認 ICP 穩定；操作中與操作後均需觀察 ICP 波形，若 ICP 持續超過 22 mmHg 未恢復，立即停止操作並通報醫師。"
       },
+      // S5 NEW: Cushing's Triad recognition
       {
-        q: "一名嚴重創傷性腦傷（TBI）患者手術清創後於 ICU 使用呼吸器。目前監測其顱內壓（ICP）為 12 mmHg，呼吸器設定為 VC-AC 模式：潮氣量（Vt）450 mL（約 6.5 mL/kg IBW），呼吸速率（RR）16 次/分，PEEP 5 cmH2O，FiO2 35%。動脈血氣分析（ABG）結果顯示：pH 7.48, PaCO2 30 mmHg, PaO2 110 mmHg, HCO3- 22 mEq/L。此時呼吸治療師最合適的臨床處置為何？",
-        a: "維持原設定，較低 PaCO2 可以進一步收縮腦血管、預防ICP 上升",
-        b: "將潮氣量調高至 600 mL（8.5 mL/kg IBW），以維持足夠的肺擴張",
-        c: "調降呼吸速率至 12 次/分，將 PaCO2維持在 35 - 45 mmHg 目標範圍，避免過度通氣導致腦血管收縮與腦部局部缺血",
-        d: "此 ABG 顯示為代謝性酸中毒，應立即通知醫師補充足夠的碳酸氫鈉（NaHCO3）",
+        q: "一名使用呼吸器的嚴重創傷性腦傷患者突然出現：血壓急遽升高（SBP 185 mmHg）、心跳過緩（HR 45 bpm），且呼吸型態由規律轉為不規則。顱內壓（ICP）監測顯示 ICP 持續上升至 40 mmHg。此臨床表現最符合下列何種描述？呼吸治療師的優先反應應為何？",
+        a: "此為典型的「自主神經反射異常（Autonomic Dysreflexia）」，應立即排查膀胱充盈，並給予抗高血壓藥物",
+        b: "此為「Cushing\'s Triad（庫欣三徵象）」，代表腦幹即將受壓迫或發生腦疝，常見治療措施包含給予高滲透壓藥物（Mannitol 或 3% 高張生理食鹽水）、緊急影像評估，並避免任何可能升高 ICP 的操作",
+        c: "血壓升高與心跳過緩代表患者循環已穩定，不需採取任何措施",
+        d: "呼吸不規則代表患者已恢復自主呼吸，應立刻停止呼吸器輔助嘗試拔管",
+        ans: "b",
+        exp: "庫欣三徵象（Cushing\'s Triad）= 高血壓 + 心跳過緩 + 不規則呼吸，是顱內壓嚴重升高、腦幹即將受壓的「晚期警示信號（Late Sign）」。一旦出現此三徵象，代表腦疝（Herniation）即將或正在發生，必須立即通報醫師，準備緊急介入：靜脈注射高滲透壓藥物（Mannitol 0.25–1 g/kg 或 3% 高張生理食鹽水）、緊急影像（CT）評估及神經外科評估是否需要手術。現行指引強調過度通氣（Hyperventilation）僅可作為極短暫的橋接措施，且需有腦氧監測支持方可使用，不建議常規施行。RT 應避免任何可能升高 ICP 的操作（如不必要的抽痰、體位變換），確保通氣設定維持正常目標（PaCO2 35–45 mmHg）。"
+      },
+      // S6 NEW: Suctioning + ICP spike
+      {
+        q: "呼吸治療師在照護一名嚴重腦傷（TBI）合併顱內壓（ICP）監測的患者時，在執行氣管內管抽痰後，ICP 從 14 mmHg 急遽升至 28 mmHg，持續約 3 分鐘後自行下降回 16 mmHg。針對此現象與未來的預防處置，下列敘述何者最適當？",
+        a: "抽痰引起的 ICP 暫時升高屬完全正常，不需任何預防措施，只需繼續常規每小時執行抽痰即可",
+        b: "抽痰是嚴重腦傷的絕對禁忌，一律不得執行，應完全放棄分泌物清除",
+        c: "此為抽痰引起的 ICP 反應；預防措施包含：抽痰前確保充足前驅充氧（Pre-oxygenation）、控制抽痰負壓與時間（< 15 秒/次）、必要時評估操作前給予短效鎮靜，並確認操作後 ICP 回到安全範圍",
+        d: "應在抽痰前給予 Mannitol 靜脈注射，之後以每 30 分鐘一次頻率持續抽痰",
         ans: "c",
-        exp: "該患者 ICP 穩定在正常範圍（12 mmHg），但 ABG 呈現 pH 7.48、PaCO2 30 mmHg，代表有過度通氣產生的「呼吸性鹼中毒」。過度通氣造成的低碳酸血症會引發腦小血管異常收縮，使腦血流量（CBF）下降，增加腦部缺氧與繼發性腦傷的風險。指引建議無 ICP 升高的腦傷患者，PaCO2 目標應維持正常生理範圍（35-45 mmHg），故應調降分鐘通氣量（如調降 RR）。"
+        exp: "氣管內管抽痰是 ICU 中常引起 ICP 暫時性升高的刺激性操作（因咳嗽反射、迷走神經刺激與胸腔內壓變化）。臨床處置重點：(1) 抽痰前給予 100% 前驅充氧（Pre-oxygenation）30–60 秒；(2) 每次抽痰時間限制在 15 秒以內；(3) 使用最低有效負壓；(4) 觀察 ICP 在操作後 1–2 分鐘應恢復至正常範圍（< 22 mmHg）；若 ICP 持續超過 22 mmHg 超過 5 分鐘，應立即通報醫師。有 ICP 監測時，「依需抽痰（as-needed suctioning）」優於「常規定時抽痰」。"
       },
+      // S7 NEW: EVD ICP 危險波形（Plateau Wave）識別與 RT 反應
       {
-        q: "一名嚴重創傷性腦傷（TBI）患者在 ICU 照護時，顱內壓（ICP）升高至 26 mmHg。病患目前使用呼吸器設定為 VC-AC 模式：Vt 420 mL，RR 12 次/分，PEEP 5 cmH2O，FiO2 40%。動脈血氣分析（ABG）顯示：pH 7.31, PaCO2 50 mmHg, PaO2 85 mmHg, HCO3- 23 mEq/L。針對此臨床情境，呼吸治療師的首要調整步驟為何？",
-        a: "調升 PEEP 值，以增加氧和",
-        b: "靜脈注射大量生理食鹽水，並調降 FiO2 至 21% 以防止氧自由基對腦部的傷害",
-        c: "無需調整呼吸器，因為 PaCO2 48 mmHg 引起的腦血管舒張有助於增加腦灌注壓（CPP）",
-        d: "調升呼吸速率以增加每分鐘通氣量，將 PaCO2 降至 35 - 38 mmHg，以促使腦血管收縮、降低 ICP",
-        ans: "d",
-        exp: "該患者 ICP 顯著升高（26 mmHg），且 ABG 顯示 PaCO2 50 mmHg（呼吸性酸中毒）。高碳酸血症會使腦血管舒張、增加腦血流量，這會直接使高顱內壓更加惡化。在急性 ICP 升高時，應立即增加通氣，使 PaCO2 快速回到正常偏低範圍（35-38 mmHg，必要時可暫時過度通氣至 30-35 mmHg），使血管適度收縮以緩解高顱內壓。"
+        q: "一名嚴重腦傷患者置有 EVD 進行 ICP 監測與 CSF 引流。呼吸治療師例行巡查時，發現 ICP 監測器出現持續大振幅、高原狀波形（Plateau Wave，又稱 A 波），ICP 維持在 50 mmHg 以上超過 5 分鐘。此時 RT 最合適的處置為何？",
+        a: "此為正常的 ICP 波形變化，繼續執行原定的胸腔物理治療計畫，不需通報",
+        b: "立即停止所有正在進行的操作，通報醫師與護理師，並避免任何可能進一步刺激或升高 ICP 的動作，等待醫療團隊評估處置",
+        c: "自行打開 EVD 引流閥讓 CSF 快速流出，不需先通報醫師",
+        d: "持續升高的 ICP 代表 EVD 管路阻塞，應立即用生理食鹽水沖通引流管",
+        ans: "b",
+        exp: "Plateau Wave（A 波）是顱內壓波形中最危險的訊號之一，表現為振幅大（通常達 50-100 mmHg）且持續 5-20 分鐘的高原狀 ICP 升高。它代表腦部的「順應性（compliance）」已耗盡、顱內空間幾乎沒有緩衝餘地，是腦疝（herniation）即將發生的警告。RT 一旦識別此波形，應：(1) 立即停止所有操作（抽痰、翻身、治療）；(2) 馬上通報醫師與護理師；(3) 不可自行調整 EVD 引流設定（開閥/夾管/沖管），EVD 的操作須由醫師或受過訓練的護理師依醫囑執行。RT 的核心角色是「即時識別、立即停止、迅速通報」，爭取緊急處置的時間窗口。"
       },
+      // S8 (unchanged) - hyperoxemia case
       {
-        q: "一名嚴重創傷性腦傷（TBI）患者剛入加護病房，使用呼吸器設定為：VC-AC, Vt 450 mL, RR 14 次/分, PEEP 5 cmH2O, FiO2 100%。抽血動脈血氣分析（ABG）顯示：pH 7.41, PaCO2 39 mmHg, PaO2 280 mmHg, HCO3- 24 mEq/L。針對此 ABG 結果，呼吸治療師最適當的處置為何？",
-        a: "立即下調 FiO2（如先降至 40 - 50%），目標使 PaO2 維持在 80 - 120 mmHg（SpO2 95 - 98%），以避免高血氧症（hyperoxemia）造成的氧化壓力與局部腦血管收縮",
+        q: "一名嚴重創傷性腦傷（TBI）患者剛入加護病房，使用呼吸器設定為：VC-AC, Vt 450 mL, RR 14 次/分, PEEP 5 cmH2O, FiO2 100%。動脈血氣分析（ABG）顯示：pH 7.41, PaCO2 39 mmHg, PaO2 280 mmHg, HCO3- 24 mEq/L。針對此 ABG 結果，呼吸治療師最適當的處置為何？",
+        a: "立即下調 FiO2（如先降至 40–50%），目標使 PaO2 維持在 80–120 mmHg（SpO2 95–98%），以避免高血氧症（hyperoxemia）造成的氧化壓力與局部腦血管收縮",
         b: "維持 FiO2 100%，因為高的動脈血氧分壓（PaO2）能增加大腦氧氣供應，加速腦細胞修復",
-        c: "應先調高 PEEP 值至10cmH2O，以利能夠快速下調FiO2",
+        c: "應先調高 PEEP 值至 10 cmH2O，以利能夠快速下調 FiO2",
         d: "懷疑檢體受到靜脈血混入污染，請護理師重新採檢",
         ans: "a",
-        exp: "此 ABG 呈現極高的動脈血氧分壓（PaO2 280 mmHg），屬於嚴重「高血氧症」。最新神經重症及 ESICM 共識均指出，高血氧會產生活性氧自由基（ROS）加劇缺血再灌流腦損傷，並引發不必要的腦血管收縮、減少腦微循環血流。指引推薦的 PaO2 目標為 80-120 mmHg，因此應立即積極下調吸入氧氣濃度（FiO2）。"
+        exp: "此 ABG 呈現極高的動脈血氧分壓（PaO2 280 mmHg），屬於嚴重「高血氧症」。最新神經重症及 ESICM 共識均指出，高血氧會產生活性氧自由基（ROS）加劇缺血再灌流腦損傷，並引發不必要的腦血管收縮、減少腦微循環血流。指引推薦的 PaO2 目標為 80–120 mmHg，因此應立即積極下調吸入氧氣濃度（FiO2）。"
       },
+      // S9 NEW: 拔管後 Stridor — 原因識別與緊急處置
       {
-        q: "一名嚴重創傷性腦傷患者之ICP 穩定維持在 15 mmHg，合併中度 ARDS 患者，使用呼吸器設定為：Volume Control, Vt 380 mL (6 mL/kg IBW), RR 18 次/分, PEEP 12 cmH2O, FiO2 50%。動脈血氣分析（ABG）顯示：pH 7.30, PaCO2 52 mmHg, PaO2 78 mmHg, HCO3- 25 mEq/L。此時測量其氣道高原壓（Pplat）為 26 cmH2O，驅動壓（Driving Pressure = Pplat - PEEP）為 14 cmH2O。下列對於此 ABG 判讀與處置的敘述，何者最適當？",
-        a: "應將呼吸速率增加至 28 次/分，以排除二氧化碳，目標使 PaCO2 < 30 mmHg",
-        b: "此為呼吸性酸中毒合併輕度低血氧。由於 ICP 穩定且高原壓及驅動壓均在安全範圍（Pplat < 30, Driving Pressure < 15），臨床上可接受此輕度高碳酸血症（容許性高碳酸血症），但應密切監測 ICP 與腦灌注",
-        c: "判讀為代謝性酸中毒，應立即給予利尿劑以促進酸性物質排出",
-        d: "應將潮氣量調高至 600 mL，以快速改善低氧血症與酸血症",
+        q: "一名嚴重創傷性腦傷（TBI）患者，插管第 12 天，評估後符合拔管條件並完成拔管。拔管約 30 分鐘後，患者出現明顯高頻吸氣性喘鳴聲（Inspiratory Stridor），SpO2 從 97% 下降至 90%，呼吸費力明顯增加。針對此情境，下列判讀與處置何者最正確？",
+        a: "吸氣性喘鳴聲屬拔管後正常反應，給予鼻導管 2 L/min 吸氧觀察即可，不需積極處置",
+        b: "此為拔管後上呼吸道阻塞（喉頭水腫/聲門下水腫）的典型表現，應立即給予霧化吸入型腎上腺素（Nebulized Epinephrine）以收縮水腫黏膜，考慮給予靜脈注射類固醇（Dexamethasone），同時準備再插管設備待命，並持續監測 SpO2 與呼吸費力程度",
+        c: "立即給予病患喝水，水分能幫助軟化喉頭水腫，喘鳴聲會自行緩解",
+        d: "此喘鳴聲代表拔管成功、聲帶恢復振動，為正向徵兆，不需介入",
         ans: "b",
-        exp: "對於嚴重腦傷合併 ARDS 的患者，雖然有輕度高碳酸血症（PaCO2 52 mmHg, pH 7.30），但若 ICP 穩定維持在安全範圍（此病患 ICP 15 mmHg），且呼吸器監測指標顯示肺保護良好（Pplat 26 < 30 cmH2O，驅動壓 14 < 15 cmH2O），臨床上可以接受此程度的「容許性高碳酸血症」（permissive hypercapnia）以防止肺泡過度牽張（VILI）。若一昧增加潮氣量，會增加肺部驅動壓，且若調降 PEEP 則會造成肺泡塌陷、進一步加重低血氧，此處置最安全。"
+        exp: "拔管後喘鳴（Post-extubation Stridor）常因長時間插管造成喉頭或聲門下黏膜水腫所致，表現為高頻吸氣性喘鳴，嚴重時可引發上呼吸道完全阻塞。對 TBI 患者而言，stridor 造成呼吸費力增加，PaCO2 上升，進而引發腦血管舒張使 ICP 上升，風險更高。臨床處置：(1) 霧化腎上腺素（Racemic Epinephrine 或 L-Epinephrine）可快速收縮水腫黏膜，通常 15-30 分鐘內見效；(2) 靜脈注射 Dexamethasone（0.15 mg/kg）可減輕發炎反應；(3) 若以上處置後氧合持續惡化或患者出現呼吸衰竭跡象，需即時準備再插管。事前執行「Cuff Leak Test（充氣洩氣試驗）」可初步預測喉頭水腫風險，陰性者（漏氣量少）建議預防性給予類固醇後再拔管。"
       },
+      // S10 NEW: SBT 期間 ABI 患者的特殊監測
       {
-        q: "一名重症腦傷合併神經源性肺水腫（NPE）患者，目前 ICP 為 18 mmHg。呼吸器設定為：VC-AC, Vt 400 mL, RR 18 次/分, PEEP 6 cmH2O, FiO2 65%。ABG 報告顯示：pH 7.32, PaCO2 47 mmHg, PaO2 58 mmHg, HCO3- 23 mEq/L。病患痰液呈現大量粉紅色泡沫狀。此時最合適的處置為何？",
-        a: "應將 PEEP 設為 0，因為 NPE 的肺泡積水只能透過利尿劑解決，PEEP 會使腦壓上升",
-        b: "立即將潮氣量調高至 600 mL，不需考慮氣道壓力與 ICP 變化",
-        c: "ABG顯示低血氧，在監測 ICP 的狀況下，可逐步調高 PEEP（如調至 10 - 12 cmH2O）以維持肺泡擴張，並給予氣道分泌物清除與評估病人體液狀態",
-        d: "將FiO2調高至100%並維持即可",
-        ans: "c",
-        exp: "神經源性肺水腫（NPE）是急性重度腦傷（如蛛網膜下腔出血、重度TBI）後，交感神經風暴導致血管劇烈收縮而引起肺毛細血管通透性增加及壓力增高。ABG 呈現 PaO2 58 mmHg（低血氧）。雖然 PEEP 會微幅增加胸腔內壓，但「低氧血症對腦細胞的二度傷害」遠大於適度 PEEP 的負面影響。指引指出在密切 ICP/CPP 監測下，PEEP 調至 12 cmH2O 內是安全的，能有效改善 NPE 造成的肺泡塌陷與分流。"
+        q: "一名急性腦傷（TBI）患者，傷後第 11 天，ICP 已穩定在 13 mmHg，目前呼吸器設定為：VC-AC, Vt 470 mL, RR 12 次/分, PEEP 5 cmH2O, FiO2 35%。患者符合常規脫離準備標準，醫療團隊計劃進行自主呼吸試驗（Spontaneous Breathing Trial, SBT）。相較於一般 ICU 病患，在 ABI 患者執行 SBT 時，下列哪項額外監測與處置原則最為重要？",
+        a: "ABI 患者的 SBT 與一般病人完全相同，只需監測 SpO2 與心跳，無需 ICP 或 PaCO2 的特別追蹤",
+        b: "SBT 期間應持續監測 ICP 與腦灌注壓（CPP），目標 ICP < 22 mmHg、CPP ≥ 60 mmHg；同時追蹤 EtCO2 或 PaCO2 趨勢，防止 PaCO2 上升引發腦血管舒張；若出現 ICP 升高、意識惡化或呼吸費力加劇，應立即中止 SBT",
+        c: "應在 SBT 期間執行過度通氣（目標 PaCO2 25-30 mmHg），以預防自主呼吸造成的 ICP 波動",
+        d: "只要 RSBI 在 SBT 前 < 105，即可進行 T 管試驗 30 分鐘，ABI 患者 SBT 過程中不需要 ICP 監測",
+        ans: "b",
+        exp: "腦傷患者進行 SBT 時，自主呼吸的出現可能透過多種機轉影響 ICP：自主呼吸費力增加時胸腔內壓降低幅度加大，若患者過於疲勞可能使 PaCO2 回升，引發腦血管舒張使 ICP 升高；同時，患者脫離呼吸輔助後的不適或躁動也可能引發交感神經亢進（Battaglini et al., 2026）。因此，ABI 患者 SBT 期間需在 ICP/CPP 持續監測下進行，並搭配 EtCO2 連續監測或頻繁 ABG 追蹤 PaCO2，維持目標 35-45 mmHg。若 SBT 期間出現 ICP 持續 > 22 mmHg 或 CPP < 60 mmHg、意識改變惡化、或呼吸費力程度顯著增加，應立即中止 SBT 並回復輔助通氣，同時評估是否需要進行氣切以利後續呼吸管理。"
       }
     ],
     attitude: [
@@ -373,14 +382,14 @@ const questions = {
         a: "默默離開，等它自己降下來",
         b: "將監測警報按靜音，等下就會下降了",
         c: "檢查管路是否曲折，確認鎮靜藥物是否滴完，並立即報告醫師與護理師",
-        d: "調低 呼吸器的 PEEP 數值",
+        d: "調低呼吸器的 PEEP 數值",
         ans: "c",
         exp: "展現主動性（Initiative）及團隊警覺（Vigilance）。ICP 持續升高是緊急情況，應立即排除可能的因素並通報團隊。"
       },
       {
-        q: "情境：你發現腦傷病人 ABG 顯示 PaCO₂ 為 50 mmHg（病人原目標為 35-40）。向醫師報告時，下列哪種表達最具專業態度？",
+        q: "情境：你發現腦傷病人 ABG 顯示 PaCO₂ 為 50 mmHg（病人原目標為 35–40）。向醫師報告時，下列哪種表達最具專業態度？",
         a: "「醫師，病人 CO₂ 很高，可以接受嗎？」",
-        b: "「醫師，病人的ABG報告出來了，你去看看。」",
+        b: "「醫師，病人的 ABG 報告出來了，你去看看。」",
         c: "「醫師，病人酸鹼值怪怪的。」",
         d: "「醫師，病人目前 PaCO₂ 50 mmHg，高於正常目標，這可能會升高 ICP，我建議調整 MV 或增加潮氣量」",
         ans: "d",
@@ -419,12 +428,12 @@ const questions = {
     knowledge: [
       {
         q: "關於脊椎損傷節段與其受影響呼吸功能的對應，下列敘述何者正確？",
-        a: "C1-C2 損傷：橫膈肌功能正常，不需依賴呼吸器",
-        b: "T1-T6 損傷：橫膈肌功能正常，但失去肋間肌支持，吸氣儲備與呼氣能力受損",
+        a: "C1–C2 損傷：橫膈肌功能正常，不需依賴呼吸器",
+        b: "T1–T6 損傷：橫膈肌功能正常，但失去肋間肌支持，吸氣儲備與呼氣能力受損",
         c: "T12 以下損傷：腹肌功能完全喪失，導致咳嗽功能喪失",
         d: "L-spine 損傷：吸氣與呼氣肌力皆會嚴重受損，必須長期氣切",
         ans: "b",
-        exp: "橫膈神經由 C3-C5 節段發出，控制橫膈肌（主要的吸氣肌）。C3-C5 節段受損會導致橫膈肌全部 or 部分癱瘓，引發嚴重的限制性通氣障礙與急性呼吸衰竭，急性期多需要建立人工氣道並給予機械通氣支持；T1-T6 損傷：橫膈肌功能正常，但肋間肌與腹肌受損，影響胸廓穩定性，導致吸氣、咳嗽無力，呼吸能力顯著下降；T7-T12 損傷：腹肌力量受損，心肺功能受影響相對較小，可能有排除痰液能力下降、運動耐力差等情形; L1 以下呼吸肌多數正常。"
+        exp: "橫膈神經由 C3–C5 節段發出，控制橫膈肌（主要的吸氣肌）。C3–C5 節段受損會導致橫膈肌全部或部分癱瘓；T1–T6 損傷：橫膈肌功能正常，但肋間肌與腹肌受損，影響胸廓穩定性，導致吸氣、咳嗽無力；T7–T12 損傷：腹肌力量受損，呼吸能力受影響相對較小；L1 以下呼吸肌多數正常。"
       },
       {
         q: "對於高位脊髓損傷（SCI）患者，其主要肺部功能改變不包括下列何者？",
@@ -433,7 +442,7 @@ const questions = {
         c: "呼氣儲備容積（ERV）大幅減少，導致咳嗽能力下降",
         d: "功能殘餘量（FRC）因肺擴張不全與胸壁順應性下降而減少",
         ans: "b",
-        exp: "脊髓損傷（SCI）患者由於呼吸肌癱瘓或無力，會導致限制性通氣障礙（VC、IC 降低）、呼氣儲備容積（ERV）減少，且由於微小肺擴張不全、肺表面張力素減少等因素，肺順應性反而「下降」（ compliance 變差，呼吸阻力增加），而非順應性升高。"
+        exp: "脊髓損傷（SCI）患者由於呼吸肌癱瘓或無力，會導致限制性通氣障礙（VC、IC 降低）、呼氣儲備容積（ERV）減少，且肺順應性反而「下降」（compliance 變差，呼吸阻力增加），而非順應性升高。"
       },
       {
         q: "脊髓損傷（SCI）患者在急性期或慢性期常發生「自主神經反射異常（Autonomic Dysreflexia, AD）」。關於 AD 狀態下對呼吸與循環系統的影響，下列何者正確？",
@@ -442,7 +451,7 @@ const questions = {
         c: "發生 AD 時，應立刻給予大量輸液，並將患者擺位調整為平躺",
         d: "多發生於 T6 或以上節段受損者，因內臟受到刺激（如膀胱腫脹），引發血壓上升、心跳過緩，並可能合併氣管痙攣與急性肺水腫",
         ans: "d",
-        exp: "自主神經反射異常（AD）常見於 T6 以上脊髓損傷患者。當損傷節段以下受到刺激（最常見為膀胱憋尿、便祕、皮膚壓迫）時，會引發交感神經劇烈反應，導致血管收縮、血壓升高，而身體會活化副交感神經反射以試圖降低心率和血壓，引發心跳過緩、支氣管痙攣等症狀，若不處理，可能導致腦出血、中風、肺水腫或死亡。"
+        exp: "自主神經反射異常（AD）常見於 T6 以上脊髓損傷患者。當損傷節段以下受到刺激（最常見為膀胱憋尿、便祕、皮膚壓迫）時，會引發交感神經劇烈反應，導致血管收縮、血壓升高，而身體會活化副交感神經反射，引發心跳過緩、支氣管痙攣等症狀，若不處理，可能導致腦出血、中風、肺水腫或死亡。"
       },
       {
         q: "脊髓損傷（SCI）患者在急性損傷初期常經歷「脊髓休克（Spinal Shock）」。此階段對其呼吸肌功能的生理影響為何？",
@@ -460,7 +469,7 @@ const questions = {
         c: "患者的氣道纖毛擺動功能喪失，無法將痰液向外輸送",
         d: "長期橫膈肌收縮過度，導致肺泡過度膨脹進而萎縮",
         ans: "b",
-        exp: "慢性 SCI 患者由於吸氣肌（橫膈肌、肋間外肌）與吐氣肌長期無力，缺乏自然的深呼吸或嘆氣（Sigh）動作來擴張肺泡，導致微小肺泡塌陷、產生慢性肺擴張不全。同時，高位神經受損者之咳嗽與清除痰液，以及吞嚥肌肉協調能力下降，長期易發生反覆分泌物微量吸入進而造成肺炎。"
+        exp: "慢性 SCI 患者由於吸氣肌（橫膈肌、肋間外肌）與吐氣肌長期無力，缺乏自然的深呼吸或嘆氣（Sigh）動作來擴張肺泡，導致微小肺泡塌陷、產生慢性肺擴張不全。同時，高位神經受損者之咳嗽與吞嚥肌肉協調能力下降，長期易發生反覆分泌物微量吸入進而造成肺炎。"
       },
       {
         q: "關於慢性期脊髓損傷（SCI）患者的肺部與胸壁順應性（compliance）改變，下列生理機轉敘述何者正確？",
@@ -473,12 +482,12 @@ const questions = {
       },
       {
         q: "脊髓損傷（SCI）患者的咳嗽能力主要取決於吐氣肌（expiratory muscles）的主動收縮。關於支配主要吐氣肌（如腹肌與內肋間肌）的脊髓神經節段，下列何者正確？",
-        a: "吐氣肌與吸氣肌相同，完全由橫膈神經（C3 - C5）支配",
-        b: "吐氣肌是由薦髓（S1 - S4）支配，只要四肢能動，咳嗽就不受影響",
+        a: "吐氣肌與吸氣肌相同，完全由橫膈神經（C3–C5）支配",
+        b: "吐氣肌是由薦髓（S1–S4）支配，只要四肢能動，咳嗽就不受影響",
         c: "吐氣是不需要肌肉收縮的被動過程，因此不論何種節段的脊髓損傷，咳嗽能力都不會受損",
-        d: "腹肌及主要吐氣肌主要由胸髓至腰髓（T6 - L1）節段支配，因此損傷部位在 T6 以上的患者，其咳嗽排出痰液的能力會受到限制",
+        d: "腹肌及主要吐氣肌主要由胸髓至腰髓（T6–L1）節段支配，因此損傷部位在 T6 以上的患者，其咳嗽排出痰液的能力會受到限制",
         ans: "d",
-        exp: "主動且強力的咳嗽需要吐氣肌（主要是腹肌及肋間內肌）迅速且強烈的收縮以產生足夠的呼氣流量。這些肌肉由 T6-L1 胸髓節段支配。因此，高位脊髓損傷（特別是 T6 以上，包括頸髓與高位胸髓損傷）會使吐氣肌無力，導致患者無法自主產生足夠的咳嗽呼氣流速（Peak Cough Flow），造成分泌物滯留並增加肺炎風險。"
+        exp: "主動且強力的咳嗽需要吐氣肌（主要是腹肌及肋間內肌）迅速且強烈的收縮以產生足夠的呼氣流量。這些肌肉由 T6–L1 胸髓節段支配。因此，高位脊髓損傷（特別是 T6 以上）會使吐氣肌無力，導致患者無法自主產生足夠的咳嗽呼氣流速（Peak Cough Flow），造成分泌物滯留並增加肺炎風險。"
       },
       {
         q: "對於無法有效自行咳痰的脊髓損傷（SCI）患者，對於下列物理治療或輔助排痰技術的原理敘述何者最為適當？",
@@ -487,7 +496,7 @@ const questions = {
         c: "咳痰機（Cough Assist）的原理是透過持續的高頻正壓震盪，使黏稠痰液液化，不需要產生任何氣流變化",
         d: "脊髓損傷患者不適合使用任何機械式排痰設備，因其可能會引發神經肌肉損傷",
         ans: "a",
-        exp: "機械式咳痰機（MIE）或咳痰輔助器（Cough Assist）是協助脊髓損傷與神經肌肉疾病患者痰液清除主要治療方式。其物理機轉是先給予一個緩慢的正壓吸氣（Insufflation）以增加肺容積，然後迅速切換為負壓（Exsufflation），模擬咳嗽產生呼氣氣流，從而將深部痰液向大氣道推移，便於抽吸 or 咳出。自主引流（Autogenic Drainage）是一種完全不需依賴設備的呼吸控制技術。利用不同深度的呼吸（潮氣容積的變化），將肺部深處的痰液逐漸移動到較大的呼吸道中，最後再利用咳嗽排出。"
+        exp: "機械式咳痰機（MIE）或咳痰輔助器（Cough Assist）是協助脊髓損傷與神經肌肉疾病患者痰液清除的主要治療方式。其物理機轉是先給予一個緩慢的正壓吸氣（Insufflation）以增加肺容積，然後迅速切換為負壓（Exsufflation），模擬咳嗽產生呼氣氣流，從而將深部痰液向大氣道推移，便於抽吸或咳出。"
       },
       {
         q: "慢性高位脊髓損傷（SCI）患者中，睡眠呼吸障礙（Sleep-Disordered Breathing, SDB）的盛行率極高。其病生理機轉主要為何？",
@@ -496,16 +505,16 @@ const questions = {
         c: "脊髓損傷僅影響日間活動，夜間睡眠時的呼吸中樞不受任何影響",
         d: "主要是因為 SCI 患者夜間氣道上皮細胞脫落，導致氣道物理性阻塞",
         ans: "b",
-        exp: "慢性脊髓損傷患者睡眠呼吸障礙盛行率常高達 60% 以上。其原因除了長期仰臥使上呼吸道輔助肌肉張力下降而易發生阻塞性呼吸中止（OSA）外，也因高位脊髓損傷影響了化學感受器與自主神經的調節，頻繁發生中樞性睡眠呼吸中止（CSA）。這會引發夜間缺氧與白天嚴重嗜睡、頭痛症狀。"
+        exp: "慢性脊髓損傷患者睡眠呼吸障礙盛行率常高達 60% 以上。其原因除了長期仰臥使上呼吸道輔助肌肉張力下降而易發生阻塞性呼吸中止（OSA）外，也因高位脊髓損傷影響了化學感受器與自主神經的調節，頻繁發生中樞性睡眠呼吸中止（CSA）。"
       },
       {
-        q: "在胸髓損傷（T1 - T12 節段）患者中，其橫膈功能良好，但臨床評估發現其呼氣儲備容積（ERV）仍大幅降低。此生理改變最合適的學理解釋為何？",
+        q: "在胸髓損傷（T1–T12 節段）患者中，其橫膈功能良好，但臨床評估發現其呼氣儲備容積（ERV）仍大幅降低。此生理改變最合適的學理解釋為何？",
         a: "胸髓受損會導致肺擴張不全（atelectasis），進而造成總肺容量（TLC）增加",
-        b: "T1 - T12 損傷會同時影響橫膈神經（phrenic nerve），使橫膈肌肉癱瘓。",
-        c: "雖然膈神經（C3-C5）健全能正常吸氣，但支配肋間肌的胸髓神經受損，導致用力呼氣與咳嗽能力下降，使 ERV 顯著降低",
+        b: "T1–T12 損傷會同時影響橫膈神經（phrenic nerve），使橫膈肌肉癱瘓",
+        c: "雖然膈神經（C3–C5）健全能正常吸氣，但支配肋間肌的胸髓神經受損，導致用力呼氣與咳嗽能力下降，使 ERV 顯著降低",
         d: "胸髓損傷會導致胸廓順應性（chest wall compliance）增加，進而導致殘氣容積（RV）代償性大幅下降",
         ans: "c",
-        exp: "胸髓 T1 - T12 主要負責支配肋間內、外肌及胸壁輔助呼吸肌。即使橫膈肌功能完全完好，但當患者欲進行用力吐氣時，由於肋間肌無力，無法有效地主動收縮縮小胸廓，導致呼氣儲備容積（ERV，代表最大被動吐氣後還能主動吐出的氣量）不足，進而影響咳嗽能力。"
+        exp: "胸髓 T1–T12 主要負責支配肋間內、外肌及胸壁輔助呼吸肌。即使橫膈肌功能完全完好，但當患者欲進行用力吐氣時，由於肋間肌無力，無法有效地主動收縮縮小胸廓，導致呼氣儲備容積（ERV）不足，進而影響咳嗽能力。"
       }
     ],
     skill: [
@@ -525,25 +534,25 @@ const questions = {
         c: "測量前先給予支氣管擴張劑",
         d: "直接以動脈血氣分析（ABG）數值取代肺量計最為準確",
         ans: "b",
-        exp: "脊髓損傷患者可能伴隨面部 or 口唇肌肉無力，標準咬嘴容易漏氣。使用法蘭絨咬嘴（flanged mouthpiece）或面罩可有效防止漏氣。此外，坐姿/半坐臥姿有助於最大化其殘餘呼吸肌功能，避免因體位（如仰臥使腹部臟器壓迫橫膈）造成的通氣量低估。"
+        exp: "脊髓損傷患者可能伴隨面部或口唇肌肉無力，標準咬嘴容易漏氣。使用法蘭絨咬嘴（flanged mouthpiece）或面罩可有效防止漏氣。此外，坐姿/半坐臥姿有助於最大化其殘餘呼吸肌功能，避免因體位（如仰臥使腹部臟器壓迫橫膈）造成的通氣量低估。"
       },
       {
         q: "在加護病房照護一名急性高位頸髓（C4）損傷病患時，關於其體位擺設與通氣生理的交互作用，下列臨床評估何者最正確？",
         a: "坐姿（Upright）對高位頸髓損傷患者的通氣最有利，因其能完全排除重力對呼吸肌的負擔",
         b: "應採取俯臥位（Prone position）作為常規擺位，這對未插管的 SCI 病患最為安全",
-        c: "在仰臥位（Supine）時，腹部臟器向頭側位移，使橫膈處於較佳的起始拉長位置（Length-Tension advantage），進而提升橫膈收縮效率與潮氣容積，但需同時考量肺部塌陷及影響分泌物排除之風險。",
+        c: "在仰臥位（Supine）時，腹部臟器向頭側位移，使橫膈處於較佳的起始拉長位置（Length-Tension advantage），進而提升橫膈收縮效率與潮氣容積，但需同時考量肺部塌陷及影響分泌物排除之風險",
         d: "體位對 SCI 患者的通氣與呼吸生理沒有任何的影響",
         ans: "c",
         exp: "高位頸髓損傷（SCI）患者因腹肌及肋間肌癱瘓，吸氣機制高度依賴橫膈。在仰臥位（Supine）下，受重力影響，腹部臟器向頭側頂壓橫膈，使原本弛緩的橫膈處於更佳的起始拉長位置（Length-Tension advantage），於吸氣時可產生較大的位移與收縮(excursion)，故其吸氣容積有時優於坐姿。然而，仰臥位易導致肺部塌陷（Dependent atelectasis）與分泌物排除困難，因此呼吸治療師於臨床擺位時，須權衡此生理優勢與呼吸力學利弊，並搭配適當呼吸道痰液清除技術。"
       },
       {
         q: "為提升脊髓損傷（SCI）病患的吸氣肌力量、協助其早日脫離呼吸器，呼吸治療師建議介入「呼吸肌訓練（Inspiratory Muscle Training, IMT）」。關於 IMT 的臨床操作與監測原則，下列何者正確？",
-        a: "可使用阻力式呼吸訓練器，初期設定為最大吸氣壓（PImax）的 20% - 30% 開始，每天進行，且需嚴密監測生命徵象與呼吸費力程度",
+        a: "可使用阻力式呼吸訓練器，初期設定為最大吸氣壓（PImax）的 20%–30% 開始，每天進行，且需嚴密監測生命徵象與呼吸費力程度",
         b: "IMT 應採取高強度、短時間訓練模式，強度設定應在 80% PImax 以上，以提升橫膈肌的耐受力",
         c: "若病患合併使用「腹部束帶（Abdominal Binder）」，應在 IMT 訓練期間移除，以利橫膈最大限度地對抗重力，達到最佳訓練成效",
         d: "針對急性期高位脊髓損傷（C4 以上）患者，由於橫膈肌肉癱瘓，IMT 應為首選治療項目，以恢復神經傳導路徑",
         ans: "a",
-        exp: "呼吸肌肉訓練（IMT）能顯著增進 SCI 患者的吸氣肌（橫膈、頸部輔助肌）力量與耐力。操作時應由低阻力（如 PImax 的 20%-30% 漸進至 60%）開始，每日兩次、每次 15 分鐘。過程中需注意患者生命徵象以及是否出現盜汗、胸腹部不同步等症狀，防止肌肉過度疲勞。"
+        exp: "呼吸肌肉訓練（IMT）能顯著增進 SCI 患者的吸氣肌（橫膈、頸部輔助肌）力量與耐力。操作時應由低阻力（如 PImax 的 20%–30% 漸進至 60%）開始，每日兩次、每次 15 分鐘。過程中需注意患者生命徵象以及是否出現盜汗、胸腹部不同步等症狀，防止肌肉過度疲勞。"
       },
       {
         q: "慢性高位脊髓損傷（SCI）合併呼吸衰竭病患，平時夜間使用非侵襲正壓通氣（NIV）支持。在進行介面（Interface）與皮膚評估時，RT 應考量的因素為？",
@@ -552,7 +561,7 @@ const questions = {
         c: "NIV 面罩只能在病患入睡時配戴，一旦醒來應立即取下改用鼻導管",
         d: "SCI 病患皮膚神經退化，故對面罩壓迫不會產生壓瘡與溫度感知",
         ans: "b",
-        exp: "慢性 SCI 患者由於感覺神經功能受損（特別是頸髓損傷者），其面部對長期面罩壓迫產生的疼痛感可能不敏感。RT應主動、定期地評估病患臉部皮膚完整性（如額頭、鼻樑、兩頰），選用合適、大小適配的矽膠面罩，並加貼水膠體敷料，以維持皮膚灌注、降低壓瘡風險並優化 NIV配戴順從性。"
+        exp: "慢性 SCI 患者由於感覺神經功能受損（特別是頸髓損傷者），其面部對長期面罩壓迫產生的疼痛感可能不敏感。RT 應主動、定期地評估病患臉部皮膚完整性（如額頭、鼻樑、兩頰），選用合適、大小適配的矽膠面罩，並加貼水膠體敷料，以維持皮膚灌注、降低壓瘡風險並優化 NIV 配戴順從性。"
       },
       {
         q: "一名 C5 頸髓損傷慢性期患者，平時於夜間使用非侵襲正壓呼吸器（BiPAP）。近一週主訴白天嚴重嗜睡、清晨頭痛且呼吸費力。在室氧（room air）狀態下抽血動脈血氣分析（ABG）結果為：pH 7.36, PaCO2 54 mmHg, PaO2 63 mmHg, HCO3- 30 mEq/L。此 ABG 的判讀與呼吸治療處置何者最正確？",
@@ -566,46 +575,46 @@ const questions = {
       {
         q: "一名急性高位頸髓（C4）損傷病患於重症加護病房使用機械通氣，設定模式為 VC-AC: Vt 400 mL, RR 14 次/分, PEEP 5 cmH2O, FiO2 45%。患者突然出現呼吸窘迫且雙側肺部呼吸音微弱。ABG 結果顯示：pH 7.21, PaCO2 68 mmHg, PaO2 65 mmHg, HCO3- 26 mEq/L。此時 RT 應執行的首要臨床評估與步驟為何？",
         a: "懷疑為患者因焦慮與呼吸器不協調，應優先給予鎮靜劑（Sedation）以抑制自主呼吸",
-        b: "可能是病人的呼吸肌肉無力，呼吸器設定之每分鐘通氣量不足，應將呼吸器頻率（RR）調升至 30  bpm",
-        c: "不需要進行任何呼吸器管路檢查，維持原設定即可，等病人冷靜下來，稍後再追蹤ABG",
+        b: "可能是病人的呼吸肌肉無力，呼吸器設定之每分鐘通氣量不足，應將呼吸器頻率（RR）調升至 30 bpm",
+        c: "不需要進行任何呼吸器管路檢查，維持原設定即可，等病人冷靜下來，稍後再追蹤 ABG",
         d: "懷疑人工氣道發生滑脫、氣囊（Cuff）破裂或管路脫落，應立即執行「手動甦醒球（Ambu bag）通氣」評估胸廓順應性與阻力，檢查氣道氣囊壓力，並排除氣道阻塞或漏氣原因",
         ans: "d",
-        exp: "ABG 顯示 pH 7.21、PaCO2 68 mmHg，為嚴重的「急性呼吸性酸中毒」。臨床合併矛盾呼吸、呼吸音微弱，可能發生了通氣量不足、氣道阻塞或肺塌陷。第一時間必須檢查人工氣道通暢度、氣囊有無破裂、抽痰，並立刻報告醫師調升呼吸器參數與進行神經學評估。"
+        exp: "ABG 顯示 pH 7.21、PaCO2 68 mmHg，為嚴重的「急性呼吸性酸中毒」。臨床合併呼吸音微弱，可能發生了通氣量不足、氣道阻塞或肺塌陷。第一時間必須檢查人工氣道通暢度、氣囊有無破裂、抽痰，並立刻報告醫師調升呼吸器參數與進行神經學評估。"
       },
       {
         q: "一名 T4 脊髓損傷患者因合併肺炎入院。呼吸治療師評估患者，其配戴鼻導管 3 L/min 下 SpO2 僅 88%。ABG 報告為：pH 7.45, PaCO2 33 mmHg, PaO2 55 mmHg, HCO3- 22 mEq/L。病患神智清醒，但頻繁咳嗽且痰液黏稠，為改善病患氧合並維持呼吸道清潔，下列哪項處置最合適？",
-        a: "改用高流量濕化氧療（HFNC），設定流量 40 - 50 L/min、FiO2 45%，並給予機械式咳痰機（MIE）或人工協助性咳嗽（Quad cough）促進痰液排除",
+        a: "改用高流量濕化氧療（HFNC），設定流量 40–50 L/min、FiO2 45%，並給予機械式咳痰機（MIE）或人工協助性咳嗽（Quad cough）促進痰液排除",
         b: "維持原本 3 L/min 鼻導管，給予止咳藥物",
         c: "立即給予氣管插管，直接從氣管內管給予抽痰",
         d: "此 ABG 為正常，不需做任何處置，讓患者自行練習深呼吸即可",
         ans: "a",
-        exp: "此 ABG 呈現 pH 7.45、PaCO2 33 mmHg、PaO2 55 mmHg，為低血氧。對於脊髓損傷（T4 損傷）肺炎患者，給予高流量濕化氧療（HFNC）能提供穩定高濃度氧氣與精準的流量，且 HFNC 的加熱加濕能有效濕化並稀釋黏稠的痰液。同時搭配咳痰機（MIE）或人工協助性咳嗽(Quad cough)，能預防分泌物堆積，降低不必要的氣管插管。"
+        exp: "此 ABG 呈現 pH 7.45、PaCO2 33 mmHg、PaO2 55 mmHg，為低血氧。對於脊髓損傷（T4 損傷）肺炎患者，給予高流量濕化氧療（HFNC）能提供穩定高濃度氧氣與精準的流量，且 HFNC 的加熱加濕能有效濕化並稀釋黏稠的痰液。同時搭配咳痰機（MIE）或人工協助性咳嗽（Quad cough），能預防分泌物堆積，降低不必要的氣管插管。"
       },
       {
-        q: "一名高位脊髓損傷患者在接受一週的機械式咳痰輔助器（MIE）治療及體位引流後，呼吸治療師進行治療前後的生理指標比較。ABG 數值從治療前的：pH 7.34, PaCO2 50 mmHg, PaO2 62 mmHg 改善至治療後的：pH 7.41, PaCO2 40 mmHg, PaO2 88 mmHg。對於此 ABG 改善的生理機轉解釋，何者最準確？",
+        q: "一名高位脊髓損傷患者在接受一週的機械式咳痰輔助器（MIE）治療及體位引流後，ABG 數值從治療前的：pH 7.34, PaCO2 50 mmHg, PaO2 62 mmHg 改善至治療後的：pH 7.41, PaCO2 40 mmHg, PaO2 88 mmHg。對於此 ABG 改善的生理機轉解釋，何者最準確？",
         a: "MIE 直接刺激了腎臟，加速了碳酸氫根（HCO3-）的排泄與酸鹼代償",
         b: "MIE 成功移除了滯留在氣道深部的大量分泌物，使塌陷的肺泡重新擴張，降低了肺內分流（Shunt）並改善通氣/灌流不均（V/Q mismatch）",
         c: "MIE 的正壓能永久治癒其神經肌肉麻痺，使其腹肌恢復主動收縮功能",
         d: "該改善僅是由於抽血時間不同產生的實驗室誤差，與物理排痰處置無任何生理關聯",
         ans: "b",
-        exp: "高位 SCI 患者因咳嗽流速（Peak Cough Flow）不足，分泌物容易在深部肺泡與細支氣管中堆積，引發微小肺塌陷與痰液蓄積，形成通氣/灌流不平衡與分流（Shunt），引發低血氧與二氧化碳堆積（ABG 呈現 PaCO2 50, PaO2 62）。使用 MIE 清除痰液並使肺泡重新擴張，肺部通氣灌流比（V/Q）獲得改善，ABG 隨之改善。"
+        exp: "高位 SCI 患者因咳嗽流速（Peak Cough Flow）不足，分泌物容易在深部肺泡與細支氣管中堆積，引發微小肺塌陷與痰液蓄積，形成通氣/灌流不平衡與分流（Shunt），引發低血氧與二氧化碳堆積。使用 MIE 清除痰液並使肺泡重新擴張，肺部通氣灌流比（V/Q）獲得改善，ABG 隨之改善。"
       },
       {
-        q: "一名 C6 頸髓損傷患者平時夜間接受非侵襲性正壓通氣(BIPAP)（設定為 IPAP 14, EPAP 5 cmH2O）。病患在未使用BIPAP，清晨 ABG 為：pH 7.33, PaCO2 51 mmHg, PaO2 65 mmHg。在 RT 衛教並使其配合夜間 BiPAP 連續使用 8 小時後，清晨剛醒時抽血 ABG 結果為：pH 7.39, PaCO2 42 mmHg, PaO2 85 mmHg。此結果提示何種臨床臨床意義？",
-        a: "病患在夜間睡眠期間發生了顯著的「通氣不足（Hypoventilation）」，而目前的 BiPAP 設定透過增加潮氣量、排除PaCO2，有效地改善了睡眠時的肺泡通氣量",
+        q: "一名 C6 頸髓損傷患者平時夜間接受非侵襲性正壓通氣（BIPAP，設定為 IPAP 14, EPAP 5 cmH2O）。病患在未使用 BIPAP，清晨 ABG 為：pH 7.33, PaCO2 51 mmHg, PaO2 65 mmHg。在 RT 衛教並使其配合夜間 BiPAP 連續使用 8 小時後，清晨剛醒時抽血 ABG 結果為：pH 7.39, PaCO2 42 mmHg, PaO2 85 mmHg。此結果提示何種臨床意義？",
+        a: "病患在夜間睡眠期間發生了顯著的「通氣不足（Hypoventilation）」，而目前的 BiPAP 設定透過增加潮氣量、排除 PaCO2，有效地改善了睡眠時的肺泡通氣量",
         b: "清晨 PaCO2 下降是由於 BiPAP 提供了過高的 EPAP，導致產生了顯著的 Auto-PEEP，使病患進行代償性的過度通氣",
         c: "此數據顯示患者的睡眠障礙已完全緩解，應立即開始進行「脫離計畫（Weaning protocol）」以完全脫離機械通氣輔助",
-        d: "由於 pH 值上升且 PaCO_2 下降，代表病患發生了呼吸性鹼中毒，應將 IPAP 調降至 10 cmH2O ",
+        d: "由於 pH 值上升且 PaCO2 下降，代表病患發生了呼吸性鹼中毒，應將 IPAP 調降至 10 cmH2O",
         ans: "a",
         exp: "SCI 患者夜間橫膈肌與輔助肌張力下降，在睡眠期容易發生通氣量不足。患者在未使用 BiPAP 時有明顯的清晨高碳酸血症（PaCO2 51 mmHg）。配戴夜間 BiPAP 後，清晨 ABG 顯示 pH 7.39、PaCO2 42 mmHg 恢復生理正常，說明目前的壓力差（IPAP - EPAP = 9 cmH2O）能有效補足患者受損的通氣功能，減少日間疲勞與頭痛，應維持此治療方案。"
       }
     ],
     attitude: [
       {
-        q: "情境：若在測量Weaning profile發現 SCI 病人 NIF 從 -35 變為 -18 cmH₂O。根據 SBAR 溝通原則，此時最專業的「Recommendation (建議)」應為？",
+        q: "情境：若在測量 Weaning profile 發現 SCI 病人 NIF 從 -35 變為 -18 cmH₂O。根據 SBAR 溝通原則，此時最專業的「Recommendation (建議)」應為？",
         a: "繼續觀察，明天再測",
         b: "建議醫師病人能夠拔管",
-        c: "告知醫護團隊病人呼吸肌力退步風險，建議考慮延後拔管或拔管後使用NIV作為支持",
+        c: "告知醫護團隊病人呼吸肌力退步風險，建議考慮延後拔管或拔管後使用 NIV 作為支持",
         d: "將數值紀錄就好，醫師會自行判讀",
         ans: "c",
         exp: "「主動回報異常」與「提出專業分析」為專業的呼吸治療師應具備。RT 應主動提出具體建議而非被動等待。"
@@ -629,16 +638,16 @@ const questions = {
         exp: "肌力評估高度依賴病人的配合（Effort-dependent）。專業的引導與激勵是獲取準確數據的關鍵技能，也是 RT 與病人溝通能力的重要展現。"
       },
       {
-        q: "情境：物理治療師 (PT) 準備幫 SCI 病人進行站立床練習。身為負責該床的 RT，應如何表現最佳的專業協作態度？",
+        q: "情境：物理治療師（PT）準備幫 SCI 病人進行站立床練習。身為負責該床的 RT，應如何表現最佳的專業協作態度？",
         a: "主動參與，確認管路預留長度、警報設定，並在過程中監測病人氧合與呼吸狀況",
         b: "告訴 PT 不要弄亂我的呼吸器管路",
         c: "讓 PT 自己去處理，出事再去救援",
         d: "叫護理師去看就好",
         ans: "a",
-        exp: "跨團隊合作 (Interprofessional Collaboration) 是現代醫療評核的核心。RT 應主動確保在進行復健治療時呼吸道安全與呼吸狀況穩定。"
+        exp: "跨團隊合作（Interprofessional Collaboration）是現代醫療評核的核心。RT 應主動確保在進行復健治療時呼吸道安全與呼吸狀況穩定。"
       },
       {
-        q: "面對長期需通氣的 SCI 病人，關於氣切 (Tracheostomy) 的溝通，何者展現了正確的專業醫學態度？",
+        q: "面對長期需通氣的 SCI 病人，關於氣切（Tracheostomy）的溝通，何者展現了正確的專業醫學態度？",
         a: "告知氣切後便再也不能說話與進食",
         b: "恐嚇病人若不氣切會立刻死亡",
         c: "提供實證數據：解釋早期氣切可減少感染與藥物使用，且後續可搭配發聲閥以恢復社交",
@@ -650,11 +659,18 @@ const questions = {
   }
 };
 
+// ─── Google Sheet 成績記錄網址 ────────────────────────────────────────────────
+// 把你部署好的「成績記錄_AppScript_獨立版.gs」的 /exec 網址貼在這裡
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbw38Qo2Q8Cqy-tWONBiPP59OB77wjlRfgbxGQnG_lucaoyH8ZA3pkzFMAN0aOU2LbwM/exec';
+
+// ─── State ───────────────────────────────────────────────────────────────────
 let currentTopic = '';
 let currentQuestions = [];
 let currentIndex = 0;
-let userAnswers = []; // 儲存使用者的選擇：'a', 'b', 'c', 'd'
+let userAnswers = [];
+let quizResult = null;
 
+// ─── UI helpers ──────────────────────────────────────────────────────────────
 function show(id) {
   ['s-welcome','s-quiz','s-result'].forEach(s => {
     document.getElementById(s).classList.add('hide');
@@ -662,31 +678,43 @@ function show(id) {
   document.getElementById(id).classList.remove('hide');
 }
 
+function showToast(msg, duration) {
+  duration = duration || 3000;
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ─── 隨機打亂（Fisher-Yates），不修改原陣列 ──────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── Quiz logic ──────────────────────────────────────────────────────────────
 function startQuiz(topic) {
   const uname = document.getElementById('username').value.trim();
-  const usid = document.getElementById('userid').value.trim();
-  
-  if(!uname || !usid) {
-    alert('請填寫姓名與學校！');
-    return;
-  }
-  
+  const usid  = document.getElementById('userid').value.trim();
+  if (!uname || !usid) { alert('請填寫姓名與學校！'); return; }
+
   currentTopic = topic;
   currentIndex = 0;
-  
-  // 匯整 知識面(10題)、技能面(10題)、態度面(5題) 題目
   const tData = questions[topic];
   currentQuestions = [];
-  
-  tData.knowledge.forEach(q => currentQuestions.push({...q, type: 'knowledge'}));
-  tData.skill.forEach(q => currentQuestions.push({...q, type: 'skill'}));
-  tData.attitude.forEach(q => currentQuestions.push({...q, type: 'attitude'}));
-  
+  // 每次開始時在各分類內部隨機打亂，維持 知識→技能→態度 的大分類順序
+  shuffle(tData.knowledge).forEach(q => currentQuestions.push({...q, type: 'knowledge'}));
+  shuffle(tData.skill).forEach(q     => currentQuestions.push({...q, type: 'skill'}));
+  shuffle(tData.attitude).forEach(q  => currentQuestions.push({...q, type: 'attitude'}));
   userAnswers = new Array(currentQuestions.length).fill(null);
-  
-  // 設定 UI 標題
-  document.getElementById('quiz-topic-title').textContent = topic === 'tbi' ? '🧠 急性腦傷（TBI）臨床照護' : '♿ 脊髓損傷（SCI）臨床照護';
-  
+
+  document.getElementById('quiz-topic-title').textContent =
+    topic === 'tbi' ? '🧠 急性腦傷（TBI）臨床照護' : '♿ 脊髓損傷（SCI）臨床照護';
+
   renderQuestion();
   show('s-quiz');
 }
@@ -694,79 +722,49 @@ function startQuiz(topic) {
 function renderQuestion() {
   const q = currentQuestions[currentIndex];
   const qArea = document.getElementById('q-area');
-  
   let typeBadge = '';
-  if(q.type === 'knowledge') typeBadge = '<span class="q-badge badge-k">📚 知識面 (1-10)</span>';
-  else if(q.type === 'skill') typeBadge = '<span class="q-badge badge-s">⚙️ 技能面 (ABG/臨床 11-20)</span>';
-  else typeBadge = '<span class="q-badge badge-a">🤝 態度面 (21-25)</span>';
+  if (q.type === 'knowledge') typeBadge = '<span class="q-badge badge-k">📚 知識面</span>';
+  else if (q.type === 'skill') typeBadge = '<span class="q-badge badge-s">⚙️ 技能面（ABG/臨床）</span>';
+  else typeBadge = '<span class="q-badge badge-a">🤝 態度面</span>';
 
-  const chosen = userAnswers[currentIndex];
+  const chosen     = userAnswers[currentIndex];
   const isAnswered = chosen !== null;
-  
-  // 生成四個選項的 HTML 結構
-  let optionsHtml = '';
-  const optKeys = ['a', 'b', 'c', 'd'];
-  
+  const optKeys    = ['a','b','c','d'];
+  let optionsHtml  = '';
+
   optKeys.forEach(key => {
-    const optText = q[key];
-    let classList = 'opt';
-    
+    let cls = 'opt';
     if (isAnswered) {
-      classList += ' disabled'; // 作答完畢後鎖定，禁止再點擊
-      if (key === q.ans) {
-        classList += ' correct'; // 正確選項以綠色呈現
-      } else if (chosen === key) {
-        classList += ' incorrect'; // 若使用者選錯，將該選項以紅色呈現
-      }
+      cls += ' disabled';
+      if (key === q.ans)      cls += ' correct';
+      else if (chosen === key) cls += ' incorrect';
     } else {
-      if (chosen === key) {
-        classList += ' selected';
-      }
+      if (chosen === key) cls += ' selected';
     }
-    
-    optionsHtml += `
-      <div class="${classList}" onclick="selectOpt('${key}')">
-        <div class="opt-idx">${key.toUpperCase()}</div>
-        <div style="flex:1;">${optText}</div>
-      </div>
-    `;
+    optionsHtml += `<div class="${cls}" onclick="selectOpt('${key}')">
+      <div class="opt-idx">${key.toUpperCase()}</div>
+      <div style="flex:1;">${q[key]}</div>
+    </div>`;
   });
 
-  // 如果已經選擇了答案，即時渲染解析框
-  let explanationHtml = '';
+  let expHtml = '';
   if (isAnswered) {
-    const isCorrect = chosen === q.ans;
-    explanationHtml = `
-      <div class="explanation-box" style="margin-top: 20px; padding: 18px; border-radius: 8px; border-left: 5px solid ${isCorrect ? 'var(--success)' : 'var(--error)'}; background: ${isCorrect ? '#e8f5e933' : '#fdecea33'}; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);">
-        <div style="font-weight: 800; font-size: 1.05rem; color: ${isCorrect ? 'var(--success)' : 'var(--error)'}; margin-bottom: 8px;">
-          ${isCorrect ? '✨ 答對了！學理扎實，繼續保持！' : `❌ 答錯了！正確答案是 [ ${q.ans.toUpperCase()} ]`}
-        </div>
-        <div style="font-size: 0.95rem; color: var(--text); line-height: 1.6;">
-          <strong style="color: #2c3e50;">💡 臨床解析：</strong>${q.exp}
-        </div>
-      </div>
-    `;
+    const ok = chosen === q.ans;
+    expHtml = `<div class="explanation-box" style="margin-top:20px;padding:18px;border-radius:8px;border-left:5px solid ${ok?'var(--success)':'var(--error)'};background:${ok?'#e8f5e933':'#fdecea33'};border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border);">
+      <div style="font-weight:800;font-size:1.05rem;color:${ok?'var(--success)':'var(--error)'};margin-bottom:8px;">${ok?'✨ 答對了！學理扎實，繼續保持！':'❌ 答錯了！正確答案是 [ '+q.ans.toUpperCase()+' ]'}</div>
+      <div style="font-size:0.95rem;color:var(--text);line-height:1.6;"><strong>💡 臨床解析：</strong>${q.exp}</div>
+    </div>`;
   }
 
-  qArea.innerHTML = `
-    ${typeBadge}
-    <div class="q-text">${currentIndex + 1}. ${q.q}</div>
-    ${optionsHtml}
-    ${explanationHtml}
-  `;
-  
-  // 更新進度條與文字
-  const progressText = `${currentIndex + 1} / ${currentQuestions.length}`;
-  document.getElementById('quiz-progress-text').textContent = progressText;
-  
-  const pct = ((currentIndex + 1) / currentQuestions.length) * 100;
+  qArea.innerHTML = `${typeBadge}<div class="q-text">${currentIndex+1}. ${q.q}</div>${optionsHtml}${expHtml}`;
+
+  document.getElementById('quiz-progress-text').textContent = `${currentIndex+1} / ${currentQuestions.length}`;
   const pBar = document.getElementById('quiz-progress-bar');
-  pBar.style.width = `${pct}%`;
+  pBar.style.width = `${((currentIndex+1)/currentQuestions.length)*100}%`;
   pBar.style.background = `var(--${currentTopic})`;
-  
-  // 上下題按鈕文字與外觀切換
+
   const nextBtn = document.querySelector('.btn-next');
-  if(currentIndex === currentQuestions.length - 1) {
+  if (currentIndex === currentQuestions.length - 1) {
     nextBtn.textContent = '🏁 送出評核';
     nextBtn.style.background = 'var(--success)';
   } else {
@@ -776,103 +774,101 @@ function renderQuestion() {
 }
 
 function selectOpt(val) {
-  // 如果這一題已經點選並解答，則禁止更改
   if (userAnswers[currentIndex] !== null) return;
-  
   userAnswers[currentIndex] = val;
   renderQuestion();
 }
 
-function prevQ() {
-  if(currentIndex > 0) {
-    currentIndex--;
-    renderQuestion();
-  }
-}
+function prevQ() { if (currentIndex > 0) { currentIndex--; renderQuestion(); } }
 
 function nextQ() {
-  if(userAnswers[currentIndex] === null) {
-    alert('請先選擇一個答案以看臨床解析！');
-    return;
-  }
-  
-  if(currentIndex < currentQuestions.length - 1) {
-    currentIndex++;
-    renderQuestion();
-  } else {
-    finishQuiz();
-  }
+  if (userAnswers[currentIndex] === null) { alert('請先選擇一個答案以看臨床解析！'); return; }
+  if (currentIndex < currentQuestions.length - 1) { currentIndex++; renderQuestion(); }
+  else finishQuiz();
 }
 
 function finishQuiz() {
   const uname = document.getElementById('username').value.trim();
-  const usid = document.getElementById('userid').value.trim();
-  
+  const usid  = document.getElementById('userid').value.trim();
   let score = 0;
   const total = currentQuestions.length;
-  
   const records = currentQuestions.map((q, i) => {
-    const isCorrect = userAnswers[i] === q.ans;
-    if(isCorrect) score++;
-    
-    const getOptionText = (letter) => {
-      if (letter === 'a') return 'A. ' + q.a;
-      if (letter === 'b') return 'B. ' + q.b;
-      if (letter === 'c') return 'C. ' + q.c;
-      if (letter === 'd') return 'D. ' + q.d;
-      return '-';
-    };
-    
-    return {
-      q: q.q,
-      chosen: getOptionText(userAnswers[i]),
-      correct_ans: getOptionText(q.ans),
-      ok: isCorrect,
-      exp: q.exp
-    };
+    const ok = userAnswers[i] === q.ans;
+    if (ok) score++;
+    const opt = l => ({ a:'A. '+q.a, b:'B. '+q.b, c:'C. '+q.c, d:'D. '+q.d }[l] || '-');
+    return { q: q.q, chosen: opt(userAnswers[i]), correct_ans: opt(q.ans), ok, exp: q.exp };
   });
-  
-  const pct = Math.round((score / total) * 100);
-  
-  // 繪製最終評核報告
-  document.getElementById('rpt-topic-name').textContent = currentTopic === 'tbi' ? '急性腦傷 (TBI) 臨床照護' : '脊髓損傷（SCI）臨床照護';
-  document.getElementById('rpt-meta-info').textContent = `姓名：${uname}　學校：${usid}`;
-  document.getElementById('rpt-score-big').innerHTML = `<span style="color:var(--${currentTopic})">${score} / ${total}（${pct}%）</span>`;
-  document.getElementById('rpt-time').textContent = '評核時間：' + new Date().toLocaleString();
+  const pct = Math.round((score/total)*100);
+  quizResult = { name: uname, school: usid, topic: currentTopic === 'tbi' ? '急性腦傷(TBI)' : '脊髓損傷(SCI)', score, total, percentage: pct, timestamp: new Date().toLocaleString() };
 
-  const ri = document.getElementById('rpt-items');
-  ri.innerHTML = records.map((r,i)=>`
+  document.getElementById('rpt-topic-name').textContent   = quizResult.topic;
+  document.getElementById('rpt-meta-info').textContent    = `姓名：${uname}　學校：${usid}`;
+  document.getElementById('rpt-score-big').innerHTML      = `<span style="color:var(--${currentTopic})">${score} / ${total}（${pct}%）</span>`;
+  document.getElementById('rpt-time').textContent         = '評核時間：' + quizResult.timestamp;
+
+  document.getElementById('rpt-items').innerHTML = records.map((r,i) => `
     <div class="report-item">
       <div class="ri-q">${i+1}. ${r.q}</div>
       <div class="ri-ans"><span class="tag ${r.ok?'tag-ok':'tag-ng'}">${r.ok?'正確 Correct':'錯誤 Incorrect'}</span> 您的選擇：${r.chosen}</div>
-      ${!r.ok?`<div class="ri-ans" style="color:var(--success);font-weight:700;">➜ 正確解答：${r.correct_ans}</div>`:''}
+      ${!r.ok ? `<div class="ri-ans" style="color:var(--success);font-weight:700;">➜ 正確解答：${r.correct_ans}</div>` : ''}
       <div class="ri-exp">💡 臨床解析：${r.exp}</div>
     </div>`).join('');
 
   show('s-result');
+  if (SHEET_URL) uploadToSheets();
 }
 
-function downloadReport() {
-  const btn = document.querySelector('[onclick="downloadReport()"]');
-  btn.textContent = '⏳ 報告圖檔生成中...'; btn.disabled = true;
-  html2canvas(document.getElementById('report-capture'), {
-    scale:2, backgroundColor:'#ffffff', scrollX:0, scrollY:-window.scrollY
-  }).then(canvas => {
-    const a = document.createElement('a');
-    a.href = canvas.toDataURL('image/png');
-    a.download = `RT_臨床評核報告_${document.getElementById('username').value.trim() || '學生'}.png`;
-    a.click();
-    btn.textContent = '💾 下載答題報告圖檔'; btn.disabled = false;
-  }).catch(err => {
-    console.error(err);
-    alert('下載失敗，請嘗試手動螢幕截圖。');
-    btn.textContent = '💾 下載答題報告圖檔'; btn.disabled = false;
-  });
+// ─── PDF Download ─────────────────────────────────────────────────────────────
+async function downloadPDF() {
+  const btn = document.querySelector('[onclick="downloadPDF()"]');
+  btn.textContent = '⏳ PDF 生成中...';
+  btn.disabled = true;
+  try {
+    const el = document.getElementById('report-capture');
+    const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0, useCORS: true });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgData = canvas.toDataURL('image/jpeg', 0.85);
+    const imgW = pageW;
+    const imgH = (canvas.height * pageW) / canvas.width;
+    let heightLeft = imgH;
+    let pos = 0;
+    pdf.addImage(imgData, 'JPEG', 0, pos, imgW, imgH);
+    heightLeft -= pageH;
+    while (heightLeft > 0) {
+      pos = heightLeft - imgH;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, pos, imgW, imgH);
+      heightLeft -= pageH;
+    }
+    const uname = document.getElementById('username').value.trim() || '學生';
+    pdf.save(`RT_臨床評核報告_${uname}.pdf`);
+    showToast('✅ PDF 下載成功！');
+  } catch(e) {
+    console.error(e);
+    alert('PDF 生成失敗，請重試或截圖儲存。');
+  }
+  btn.textContent = '📄 下載 PDF 報告';
+  btn.disabled = false;
 }
 
-function restart() {
-  show('s-welcome');
+// ─── Google Sheet Upload ──────────────────────────────────────────────────────
+// 使用 navigator.sendBeacon()：不受 file:// 跨域限制，fire-and-forget，最可靠
+function uploadToSheets() {
+  if (!SHEET_URL || !quizResult) return;
+  try {
+    const payload = JSON.stringify(quizResult);
+    const blob = new Blob([payload], { type: 'text/plain' });
+    const sent = navigator.sendBeacon(SHEET_URL, blob);
+    console.log(sent ? '✅ 成績已送出（sendBeacon）' : '⚠️ sendBeacon 回傳 false，請確認網址是否正確');
+  } catch(e) {
+    console.error('❌ 成績上傳失敗：', e);
+  }
 }
+
+function restart() { quizResult = null; show('s-welcome'); }
 </script>
 </body>
 </html>
