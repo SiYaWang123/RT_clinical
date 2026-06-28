@@ -127,7 +127,10 @@
   <div id="s-quiz" class="card hide">
     <div class="nav-bar">
       <div class="nav-title" id="quiz-topic-title">-</div>
-      <div style="font-size: 0.9rem; color: var(--muted);" id="quiz-progress-text">0 / 0</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+        <div style="font-size:0.9rem;color:var(--muted);" id="quiz-progress-text">0 / 0</div>
+        <div style="font-size:0.75rem;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:0.03em;" id="quiz-timer">⏱ 00:00</div>
+      </div>
     </div>
     <div class="progress-bar-container">
       <div class="progress-bar" id="quiz-progress-bar" style="width: 0%;"></div>
@@ -670,6 +673,31 @@ let currentIndex = 0;
 let userAnswers = [];
 let quizResult = null;
 
+// ─── Timer ───────────────────────────────────────────────────────────────────
+let timerInterval = null;
+let elapsedSeconds = 0;
+
+function startTimer() {
+  elapsedSeconds = 0;
+  const el = document.getElementById('quiz-timer');
+  if (el) el.textContent = '⏱ 00:00';
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    elapsedSeconds++;
+    const mm = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+    const ss = String(elapsedSeconds % 60).padStart(2, '0');
+    const el = document.getElementById('quiz-timer');
+    if (el) el.textContent = `⏱ ${mm}:${ss}`;
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  const mm = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+  const ss = String(elapsedSeconds % 60).padStart(2, '0');
+  return `${mm}:${ss}`;
+}
+
 // ─── UI helpers ──────────────────────────────────────────────────────────────
 function show(id) {
   ['s-welcome','s-quiz','s-result'].forEach(s => {
@@ -715,6 +743,7 @@ function startQuiz(topic) {
   document.getElementById('quiz-topic-title').textContent =
     topic === 'tbi' ? '🧠 急性腦傷（TBI）臨床照護' : '♿ 脊髓損傷（SCI）臨床照護';
 
+  startTimer();
   renderQuestion();
   show('s-quiz');
 }
@@ -799,7 +828,8 @@ function finishQuiz() {
     return { q: q.q, chosen: opt(userAnswers[i]), correct_ans: opt(q.ans), ok, exp: q.exp };
   });
   const pct = Math.round((score/total)*100);
-  quizResult = { name: uname, school: usid, topic: currentTopic === 'tbi' ? '急性腦傷(TBI)' : '脊髓損傷(SCI)', score, total, percentage: pct, timestamp: new Date().toLocaleString() };
+  const totalTime = stopTimer();
+  quizResult = { name: uname, school: usid, topic: currentTopic === 'tbi' ? '急性腦傷(TBI)' : '脊髓損傷(SCI)', score, total, percentage: pct, timestamp: new Date().toLocaleString(), totalTime };
 
   document.getElementById('rpt-topic-name').textContent   = quizResult.topic;
   document.getElementById('rpt-meta-info').textContent    = `姓名：${uname}　學校：${usid}`;
